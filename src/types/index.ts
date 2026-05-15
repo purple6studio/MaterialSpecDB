@@ -1,22 +1,18 @@
-export interface Brand {
+export interface MaterialCategory {
   id: string;
-  brand_name: string;
-  website: string;
+  category_eng: string;
+  category_kor: string;
+  code_prefix: string;
 }
 
 export interface Material {
   id: string;
-  brand_id: string;
-  name: string;
-  model_number: string;
-  cat_1: "Material" | "Sanitary" | "Lighting" | "Hardware";
-  cat_2: string;
-  thumb_url: string | null;
-  color: string;
-  finish: string;
-  unit: string;
-  price_per_unit: number;
-  vendors: string[];
+  category_id: string;
+  material_code: string;
+  material_item: string;
+  material_finish: string;
+  material_size: string;
+  material_image: string | null;
 }
 
 export interface VendorContact {
@@ -28,8 +24,11 @@ export interface VendorContact {
   email: string;
 }
 
+export type VendorType = "material" | "other";
+
 export interface Vendor {
   id: string;
+  vendor_type: VendorType;
   company_name: string;
   specialty: string;
   address: string;
@@ -44,17 +43,11 @@ export interface MaterialVendorLink {
   vendor_id: string;
 }
 
-export type ProjectStatus = "pending" | "in_progress" | "completed";
-
 export interface Project {
   id: string;
   project_name: string;
-  client_name: string;
-  status: ProjectStatus;
-  address: string;
-  area_sqm: number;
-  start_date: string;
-  end_date: string;
+  project_client: string;
+  project_year: number;
 }
 
 export interface ProjectSpec {
@@ -66,18 +59,10 @@ export interface ProjectSpec {
 }
 
 export interface DummyData {
-  brands: Brand[];
+  material_categories: MaterialCategory[];
   materials: Material[];
   vendors: Vendor[];
   material_vendor_links: MaterialVendorLink[];
   projects: Project[];
   project_specs: ProjectSpec[];
 }
-
-export const CAT1_LIST = ["Material", "Sanitary", "Lighting", "Hardware"] as const;
-export const CAT2_MAP: Record<string, string[]> = {
-  Material: ["Paint", "Tile", "Floor", "Wallpaper"],
-  Sanitary: ["Toilet", "Bathtub", "Basin", "Shower"],
-  Lighting: ["Downlight", "Pendant", "Wall", "Track"],
-  Hardware: ["Door", "Handle", "Hinge", "Lock"],
-};

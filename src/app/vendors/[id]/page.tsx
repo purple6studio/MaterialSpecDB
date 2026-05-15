@@ -3,14 +3,13 @@ import Link from "next/link";
 import {
   getVendorById,
   getMaterialsForVendor,
-  getBrandById,
+  getMaterialCategoryById,
   getData,
 } from "@/lib/data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { formatPrice } from "@/lib/utils";
 import {
   ArrowLeft,
   MapPin,
@@ -21,24 +20,10 @@ import {
   ExternalLink,
   FolderOpen,
 } from "lucide-react";
-import type { ProjectStatus } from "@/types";
-
-const statusConfig: Record<ProjectStatus, { label: string; variant: "success" | "info" | "warning" }> = {
-  completed: { label: "완료", variant: "success" },
-  in_progress: { label: "진행중", variant: "info" },
-  pending: { label: "예정", variant: "warning" },
-};
 
 interface Props {
   params: Promise<{ id: string }>;
 }
-
-const cat1Colors: Record<string, string> = {
-  Material: "bg-blue-50 text-blue-700 border-blue-200",
-  Sanitary: "bg-purple-50 text-purple-700 border-purple-200",
-  Lighting: "bg-amber-50 text-amber-700 border-amber-200",
-  Hardware: "bg-green-50 text-green-700 border-green-200",
-};
 
 export default async function VendorDetailPage({ params }: Props) {
   const { id } = await params;
@@ -158,32 +143,31 @@ export default async function VendorDetailPage({ params }: Props) {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b">
+                      <th className="text-left font-medium text-muted-foreground pb-2 w-24">코드</th>
                       <th className="text-left font-medium text-muted-foreground pb-2">자재명</th>
                       <th className="text-left font-medium text-muted-foreground pb-2">카테고리</th>
-                      <th className="text-left font-medium text-muted-foreground pb-2">제조사</th>
-                      <th className="text-right font-medium text-muted-foreground pb-2">단가</th>
+                      <th className="text-left font-medium text-muted-foreground pb-2">마감</th>
                       <th className="pb-2 w-10" />
                     </tr>
                   </thead>
                   <tbody>
                     {materials.map((m) => {
-                      const brand = getBrandById(m.brand_id);
+                      const category = getMaterialCategoryById(m.category_id);
                       return (
                         <tr key={m.id} className="border-b last:border-0">
+                          <td className="py-2.5 font-mono text-xs">{m.material_code}</td>
+                          <td className="py-2.5 font-medium">{m.material_item}</td>
                           <td className="py-2.5">
-                            <div className="font-medium">{m.name}</div>
-                            <div className="text-xs text-muted-foreground font-mono">{m.model_number}</div>
+                            {category ? (
+                              <div>
+                                <div className="text-xs font-medium">{category.category_kor}</div>
+                                <div className="text-xs text-muted-foreground">{category.category_eng}</div>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
                           </td>
-                          <td className="py-2.5">
-                            <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs font-medium ${cat1Colors[m.cat_1] ?? ""}`}>
-                              {m.cat_1}
-                            </span>
-                            <span className="block text-xs text-muted-foreground mt-0.5">{m.cat_2}</span>
-                          </td>
-                          <td className="py-2.5 text-sm">{brand?.brand_name ?? "-"}</td>
-                          <td className="py-2.5 text-right font-medium tabular-nums">
-                            {formatPrice(m.price_per_unit)}
-                          </td>
+                          <td className="py-2.5 text-sm text-muted-foreground">{m.material_finish || "-"}</td>
                           <td className="py-2.5">
                             <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
                               <Link href={`/materials/${m.id}`}>
@@ -235,26 +219,22 @@ export default async function VendorDetailPage({ params }: Props) {
                 <p className="text-sm text-muted-foreground">참여한 프로젝트가 없습니다.</p>
               ) : (
                 <ul className="space-y-2">
-                  {relatedProjects.map((project) => {
-                    const cfg = statusConfig[project.status];
-                    return (
-                      <li key={project.id}>
-                        <Link
-                          href={`/projects/${project.id}`}
-                          className="flex items-start gap-2 group rounded-md hover:bg-accent px-2 py-1.5 -mx-2 transition-colors"
-                        >
-                          <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-muted-foreground/50 shrink-0 group-hover:bg-primary transition-colors" />
-                          <div className="flex-1 min-w-0">
-                            <span className="text-sm font-medium group-hover:underline leading-snug block truncate">
-                              {project.project_name}
-                            </span>
-                            <span className="text-xs text-muted-foreground">{project.client_name}</span>
-                          </div>
-                          <Badge variant={cfg.variant} className="shrink-0 mt-0.5">{cfg.label}</Badge>
-                        </Link>
-                      </li>
-                    );
-                  })}
+                  {relatedProjects.map((project) => (
+                    <li key={project.id}>
+                      <Link
+                        href={`/projects/${project.id}`}
+                        className="flex items-start gap-2 group rounded-md hover:bg-accent px-2 py-1.5 -mx-2 transition-colors"
+                      >
+                        <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-muted-foreground/50 shrink-0 group-hover:bg-primary transition-colors" />
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm font-medium group-hover:underline leading-snug block truncate">
+                            {project.project_name}
+                          </span>
+                          <span className="text-xs text-muted-foreground">{project.project_client} · {project.project_year}</span>
+                        </div>
+                      </Link>
+                    </li>
+                  ))}
                 </ul>
               )}
             </CardContent>

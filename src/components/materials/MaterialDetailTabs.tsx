@@ -5,9 +5,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { formatPrice } from "@/lib/utils";
-import { Building2, Phone, Mail, Globe, FolderOpen, Tag } from "lucide-react";
-import type { Material, Brand, Vendor, ProjectSpec, Project } from "@/types";
+import { Building2, Phone, Mail, FolderOpen, Tag } from "lucide-react";
+import type { Material, MaterialCategory, Vendor, ProjectSpec, Project } from "@/types";
 
 interface RelatedProject {
   spec: ProjectSpec;
@@ -16,12 +15,12 @@ interface RelatedProject {
 
 interface Props {
   material: Material;
-  brand: Brand | undefined;
+  category: MaterialCategory | undefined;
   vendors: Vendor[];
   relatedProjects: RelatedProject[];
 }
 
-export function MaterialDetailTabs({ material, brand, vendors, relatedProjects }: Props) {
+export function MaterialDetailTabs({ material, category, vendors, relatedProjects }: Props) {
   return (
     <Tabs defaultValue="spec">
       <TabsList variant="line">
@@ -51,35 +50,17 @@ export function MaterialDetailTabs({ material, brand, vendors, relatedProjects }
           <CardContent className="pt-6">
             <dl className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm">
               {[
-                { label: "제조사", value: brand?.brand_name },
-                { label: "모델번호", value: material.model_number, mono: true },
-                { label: "대분류", value: material.cat_1 },
-                { label: "소분류", value: material.cat_2 },
-                { label: "색상", value: material.color },
-                { label: "마감", value: material.finish },
-                { label: "규격/단위", value: material.unit },
-                { label: "단가", value: formatPrice(material.price_per_unit) },
+                { label: "코드",       value: material.material_code, mono: true },
+                { label: "카테고리",   value: category ? `${category.category_kor} (${category.category_eng})` : "-" },
+                { label: "마감",       value: material.material_finish || "-" },
+                { label: "크기",       value: material.material_size || "-" },
               ].map(({ label, value, mono }) => (
                 <div key={label}>
                   <dt className="text-muted-foreground mb-0.5">{label}</dt>
-                  <dd className={`font-medium ${mono ? "font-mono text-xs" : ""}`}>{value ?? "-"}</dd>
+                  <dd className={`font-medium ${mono ? "font-mono text-xs" : ""}`}>{value}</dd>
                 </div>
               ))}
             </dl>
-            {brand?.website && (
-              <>
-                <Separator className="my-4" />
-                <a
-                  href={brand.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-                >
-                  <Globe className="h-3.5 w-3.5" />
-                  {brand.brand_name} 공식 사이트
-                </a>
-              </>
-            )}
           </CardContent>
         </Card>
       </TabsContent>
@@ -102,6 +83,7 @@ export function MaterialDetailTabs({ material, brand, vendors, relatedProjects }
                     </div>
                     <Badge variant="outline">{v.specialty}</Badge>
                   </div>
+                  <Separator className="mb-3" />
                   <div className="space-y-1.5">
                     {v.contacts.map((c) => (
                       <div key={c.id} className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -131,7 +113,7 @@ export function MaterialDetailTabs({ material, brand, vendors, relatedProjects }
                   <Link href={`/projects/${project.id}`} className="font-medium text-sm hover:underline block">
                     {project.project_name}
                   </Link>
-                  <p className="text-xs text-muted-foreground mt-1">{project.client_name}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{project.project_client} · {project.project_year}</p>
                   {spec.memo && (
                     <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed border-t pt-1.5">
                       {spec.memo}

@@ -1,4 +1,4 @@
-import type { DummyData, Material, Vendor, Brand, Project } from "@/types";
+import type { DummyData, Material, MaterialCategory, Vendor, Project } from "@/types";
 import rawData from "@/data/dummy.json";
 
 const data = rawData as DummyData;
@@ -15,16 +15,20 @@ export function getMaterialById(id: string): Material | undefined {
   return data.materials.find((m) => m.id === id);
 }
 
+export function getMaterialCategories(): MaterialCategory[] {
+  return data.material_categories;
+}
+
+export function getMaterialCategoryById(id: string): MaterialCategory | undefined {
+  return data.material_categories.find((c) => c.id === id);
+}
+
 export function getVendors(): Vendor[] {
   return data.vendors;
 }
 
 export function getVendorById(id: string): Vendor | undefined {
   return data.vendors.find((v) => v.id === id);
-}
-
-export function getBrandById(id: string): Brand | undefined {
-  return data.brands.find((b) => b.id === id);
 }
 
 export function getProjects(): Project[] {
