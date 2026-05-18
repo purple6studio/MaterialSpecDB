@@ -44,6 +44,33 @@ export async function createDistributor(
   return { success: true };
 }
 
+export async function createMaterialCategory(
+  prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const { error } = await supabase.from("material_categories").insert({
+    id: crypto.randomUUID(),
+    code_prefix: formData.get("code_prefix") as string,
+    category_eng: formData.get("category_eng") as string,
+    category_kor: formData.get("category_kor") as string,
+  });
+  if (error) return { success: false, error: error.message };
+  revalidatePath("/materials/categories");
+  revalidatePath("/materials");
+  return { success: true };
+}
+
+export async function deleteMaterialCategory(id: string): Promise<ActionState> {
+  const { error } = await supabase
+    .from("material_categories")
+    .delete()
+    .eq("id", id);
+  if (error) return { success: false, error: error.message };
+  revalidatePath("/materials/categories");
+  revalidatePath("/materials");
+  return { success: true };
+}
+
 export async function createProject(
   prevState: ActionState,
   formData: FormData

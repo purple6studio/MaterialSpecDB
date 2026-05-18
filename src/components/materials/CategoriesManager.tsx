@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useTransition, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { createMaterialCategory, deleteMaterialCategory } from "@/lib/actions";
 import type { MaterialCategory } from "@/types";
 
 interface Props {
@@ -16,6 +17,8 @@ export function CategoriesManager({ initialCategories }: Props) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ code_prefix: "", category_eng: "", category_kor: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [addPending, startAdd] = useTransition();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   function validate() {
     const e: Record<string, string> = {};
@@ -30,20 +33,42 @@ export function CategoriesManager({ initialCategories }: Props) {
   function handleAdd() {
     const e = validate();
     if (Object.keys(e).length > 0) { setErrors(e); return; }
-    const newCat: MaterialCategory = {
-      id: `mc_${Date.now()}`,
-      code_prefix: form.code_prefix.toUpperCase().trim(),
-      category_eng: form.category_eng.toUpperCase().trim(),
-      category_kor: form.category_kor.trim(),
-    };
-    setCategories((prev) => [...prev, newCat]);
-    setForm({ code_prefix: "", category_eng: "", category_kor: "" });
-    setErrors({});
-    setShowForm(false);
+
+    const formData = new FormData();
+    formData.set("code_prefix", form.code_prefix.toUpperCase().trim());
+    formData.set("category_eng", form.category_eng.toUpperCase().trim());
+    formData.set("category_kor", form.category_kor.trim());
+
+    startAdd(async () => {
+      const result = await createMaterialCategory(null, formData);
+      if (result?.success) {
+        setCategories((prev) => [
+          ...prev,
+          {
+            id: `mc_${Date.now()}`,
+            code_prefix: form.code_prefix.toUpperCase().trim(),
+            category_eng: form.category_eng.toUpperCase().trim(),
+            category_kor: form.category_kor.trim(),
+          },
+        ]);
+        setForm({ code_prefix: "", category_eng: "", category_kor: "" });
+        setErrors({});
+        setShowForm(false);
+      } else {
+        setErrors({ _server: result?.error ?? "저장에 실패했습니다." });
+      }
+    });
   }
 
   function handleDelete(id: string) {
-    setCategories((prev) => prev.filter((c) => c.id !== id));
+    setDeletingId(id);
+    startAdd(async () => {
+      const result = await deleteMaterialCategory(id);
+      if (result?.success) {
+        setCategories((prev) => prev.filter((c) => c.id !== id));
+      }
+      setDeletingId(null);
+    });
   }
 
   return (
@@ -59,7 +84,6 @@ export function CategoriesManager({ initialCategories }: Props) {
         </Button>
       </div>
 
-      {/* Add form */}
       {showForm && (
         <Card className="mb-6 border-primary/30">
           <CardHeader>
@@ -110,8 +134,13 @@ export function CategoriesManager({ initialCategories }: Props) {
                 )}
               </div>
             </div>
+            {errors._server && (
+              <p className="text-xs text-destructive mb-3">{errors._server}</p>
+            )}
             <div className="flex gap-2">
-              <Button size="sm" onClick={handleAdd}>추가</Button>
+              <Button size="sm" onClick={handleAdd} disabled={addPending}>
+                {addPending ? "저장 중..." : "추가"}
+              </Button>
               <Button size="sm" variant="ghost" onClick={() => { setShowForm(false); setErrors({}); }}>
                 취소
               </Button>
@@ -120,7 +149,6 @@ export function CategoriesManager({ initialCategories }: Props) {
         </Card>
       )}
 
-      {/* Table */}
       <div className="rounded-xl border overflow-hidden">
         <table className="w-full text-sm">
           <thead>
@@ -150,6 +178,7 @@ export function CategoriesManager({ initialCategories }: Props) {
                       size="icon"
                       className="h-7 w-7 text-muted-foreground hover:text-destructive"
                       onClick={() => handleDelete(c.id)}
+                      disabled={deletingId === c.id}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
