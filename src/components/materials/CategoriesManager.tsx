@@ -130,10 +130,10 @@ export function CategoriesManager({ initialCategories }: Props) {
     });
   }
 
-  const thClass = "flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors";
+  const thClass = "flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-full";
 
   return (
-    <div className="p-8 max-w-3xl mx-auto">
+    <div className="p-8">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">카테고리 관리</h1>
@@ -154,7 +154,7 @@ export function CategoriesManager({ initialCategories }: Props) {
             <div className="grid grid-cols-3 gap-4 mb-4">
               <div>
                 <label className="text-xs text-muted-foreground mb-1.5 block">
-                  코드 접두사 <span className="text-destructive">*</span>
+                  코드 <span className="text-destructive">*</span>
                 </label>
                 <Input
                   placeholder="예: PA"
@@ -206,17 +206,17 @@ export function CategoriesManager({ initialCategories }: Props) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-muted/40">
-              <th className="px-4 py-3 w-28">
+              <th className="px-4 py-3 w-28 text-center">
                 <button onClick={() => toggleSort("code_prefix")} className={thClass}>
-                  코드 접두사 <SortIcon active={sortKey === "code_prefix"} dir={sortDir} />
+                  코드 <SortIcon active={sortKey === "code_prefix"} dir={sortDir} />
                 </button>
               </th>
-              <th className="px-4 py-3">
+              <th className="px-4 py-3 text-center">
                 <button onClick={() => toggleSort("category_eng")} className={thClass}>
                   영문명 <SortIcon active={sortKey === "category_eng"} dir={sortDir} />
                 </button>
               </th>
-              <th className="px-4 py-3">
+              <th className="px-4 py-3 text-center">
                 <button onClick={() => toggleSort("category_kor")} className={thClass}>
                   한글명 <SortIcon active={sortKey === "category_kor"} dir={sortDir} />
                 </button>
@@ -238,34 +238,34 @@ export function CategoriesManager({ initialCategories }: Props) {
                 const isEditing = editingId === c.id;
                 return (
                   <tr key={c.id} className={`border-b last:border-0 transition-colors ${isEditing ? "bg-muted/20" : "hover:bg-muted/30"}`}>
-                    <td className="px-4 py-2.5">
+                    <td className="px-4 py-2.5 text-center">
                       {isEditing ? (
                         <Input
                           value={editForm.code_prefix}
                           onChange={(e) => setEditForm((f) => ({ ...f, code_prefix: e.target.value }))}
-                          className="h-7 text-xs font-mono"
+                          className="h-7 text-xs font-mono text-center"
                         />
                       ) : (
                         <span className="font-mono font-medium">{c.code_prefix}</span>
                       )}
                     </td>
-                    <td className="px-4 py-2.5">
+                    <td className="px-4 py-2.5 text-center">
                       {isEditing ? (
                         <Input
                           value={editForm.category_eng}
                           onChange={(e) => setEditForm((f) => ({ ...f, category_eng: e.target.value }))}
-                          className="h-7 text-xs"
+                          className="h-7 text-xs text-center"
                         />
                       ) : (
                         <span className="font-medium">{c.category_eng}</span>
                       )}
                     </td>
-                    <td className="px-4 py-2.5">
+                    <td className="px-4 py-2.5 text-center">
                       {isEditing ? (
                         <Input
                           value={editForm.category_kor}
                           onChange={(e) => setEditForm((f) => ({ ...f, category_kor: e.target.value }))}
-                          className="h-7 text-xs"
+                          className="h-7 text-xs text-center"
                         />
                       ) : (
                         <span>{c.category_kor}</span>

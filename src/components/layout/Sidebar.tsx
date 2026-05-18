@@ -109,7 +109,7 @@ export function Sidebar() {
   ];
 
   return (
-    <aside className="fixed left-0 top-14 z-40 h-[calc(100vh-56px)] w-72 border-r bg-card flex flex-col">
+    <aside className="sticky top-14 h-[calc(100vh-56px)] w-72 shrink-0 border-r bg-card flex flex-col">
       <nav className="flex-1 px-3 py-4 space-y-1">
         <CollapsibleMenu
           icon={Layers}

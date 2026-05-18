@@ -22,7 +22,7 @@ export default async function ProjectDetailPage({ params }: Props) {
   if (!project) notFound();
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="p-8">
       <Button variant="ghost" size="sm" className="mb-6 -ml-2 gap-2 text-muted-foreground" asChild>
         <Link href="/projects">
           <ArrowLeft className="h-4 w-4" />

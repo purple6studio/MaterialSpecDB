@@ -58,7 +58,7 @@ export function ProjectsList({ projects: initialProjects, allSpecs }: Props) {
     });
   }, [projects, sortKey, sortDir, specCountMap]);
 
-  const thClass = "flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors";
+  const thClass = "flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-full";
 
   return (
     <div className="rounded-xl border overflow-hidden">
@@ -95,11 +95,11 @@ export function ProjectsList({ projects: initialProjects, allSpecs }: Props) {
               >
                 <Link
                   href={`/projects/${project.id}`}
-                  className="font-medium hover:underline underline-offset-4 truncate pr-4"
+                  className="font-medium hover:underline underline-offset-4 truncate text-center"
                 >
                   {project.project_name}
                 </Link>
-                <span className="text-muted-foreground truncate pr-4">{project.project_client}</span>
+                <span className="text-muted-foreground truncate text-center">{project.project_client}</span>
                 <span className="text-center text-muted-foreground tabular-nums">{project.project_year}</span>
                 <span className="flex justify-center">
                   <Badge variant="secondary">{specCount}개</Badge>

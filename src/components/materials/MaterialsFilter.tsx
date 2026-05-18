@@ -92,7 +92,7 @@ export function MaterialsFilter({ materials: initialMaterials, categories }: Pro
     });
   }
 
-  const thClass = "flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors";
+  const thClass = "flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-full";
 
   return (
     <>
@@ -166,7 +166,7 @@ export function MaterialsFilter({ materials: initialMaterials, categories }: Pro
                 const cat = categoryMap[m.category_id];
                 return (
                   <tr key={m.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-center">
                       {cat ? (
                         <div>
                           <div className="text-xs font-medium">{cat.category_kor}</div>
@@ -176,9 +176,9 @@ export function MaterialsFilter({ materials: initialMaterials, categories }: Pro
                         <span className="text-muted-foreground">-</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 font-medium">{m.material_item}</td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{m.material_finish || "-"}</td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground font-mono">{m.material_size || "-"}</td>
+                    <td className="px-4 py-3 font-medium text-center">{m.material_item}</td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground text-center">{m.material_finish || "-"}</td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground font-mono text-center">{m.material_size || "-"}</td>
                     <td className="px-4 py-3 text-center">
                       <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={() => setSelected(m)}>
                         상세

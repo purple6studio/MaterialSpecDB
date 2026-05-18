@@ -15,14 +15,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className="antialiased">
+      <body className="antialiased bg-white">
         <Header />
-        <Sidebar />
-        <main className="ml-72 min-h-screen bg-background pt-14">
-          <div className="max-w-[1280px] mx-auto">
+        <div className="max-w-[1440px] mx-auto flex pt-14 min-h-screen bg-background">
+          <Sidebar />
+          <main className="flex-1 bg-background">
             {children}
-          </div>
-        </main>
+          </main>
+        </div>
       </body>
     </html>
   );

@@ -2,11 +2,11 @@
 
 import { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
-import { Search, Users, ChevronRight, Trash2 } from "lucide-react";
+import { Search, Users, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SortIcon } from "@/components/ui/sort-icon";
+import { cn } from "@/lib/utils";
 import { deleteDistributor } from "@/lib/actions";
 import { AddDistributorModal } from "@/components/distributors/AddDistributorModal";
 import type { Distributor, DistributorType } from "@/types";
@@ -22,6 +22,7 @@ interface Props {
 
 export function DistributorsFilter({ distributors: initialDistributors, defaultType }: Props) {
   const [distributors, setDistributors] = useState<Distributor[]>(initialDistributors);
+  const [activeTab, setActiveTab] = useState<DistributorType>(defaultType ?? "material");
   const [search, setSearch] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
@@ -46,17 +47,21 @@ export function DistributorsFilter({ distributors: initialDistributors, defaultT
     setDistributors((prev) => [...prev, d]);
   }
 
+  const byTab = useMemo(
+    () => distributors.filter((v) => v.distributor_type === activeTab),
+    [distributors, activeTab]
+  );
+
   const filtered = useMemo(() => {
-    return distributors.filter((v) => {
-      const q = search.toLowerCase();
-      return (
+    const q = search.toLowerCase();
+    return byTab.filter(
+      (v) =>
         !q ||
         v.company_name.toLowerCase().includes(q) ||
         (v.address ?? "").toLowerCase().includes(q) ||
-        v.contacts.some((c) => c.name.toLowerCase().includes(q) || c.role.toLowerCase().includes(q))
-      );
-    });
-  }, [distributors, search]);
+        v.contacts.some((c) => c.name.toLowerCase().includes(q) || (c.role ?? "").toLowerCase().includes(q))
+    );
+  }, [byTab, search]);
 
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
@@ -70,15 +75,59 @@ export function DistributorsFilter({ distributors: initialDistributors, defaultT
 
   const thClass = "flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors";
 
+  const allTabs: { type: DistributorType; label: string }[] = [
+    { type: "material", label: "마감재 업체" },
+    { type: "other", label: "기타 업체" },
+  ];
+
+  // 마감재 업체 페이지: 마감재 탭만 / 기타 업체 페이지: 마감재 제외 / 전체: 모두 표시
+  const tabs = defaultType === "material"
+    ? allTabs.filter((t) => t.type === "material")
+    : defaultType === "other"
+    ? allTabs.filter((t) => t.type !== "material")
+    : allTabs;
+
+  // 마감재 업체 페이지에서만 모달 타입 잠금
+  const lockModalType = defaultType === "material";
+
   return (
     <>
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">업체</h1>
           <p className="text-muted-foreground mt-1">자재 공급 및 시공 협력 업체 관리</p>
         </div>
-        <AddDistributorModal onSuccess={handleAddSuccess} defaultType={defaultType} />
+        <AddDistributorModal
+          key={activeTab}
+          onSuccess={handleAddSuccess}
+          defaultType={activeTab}
+          lockType={lockModalType}
+        />
+      </div>
+
+      {/* Tabs */}
+      <div className="flex border-b mb-4">
+        {tabs.map((tab) => (
+          <button
+            key={tab.type}
+            onClick={() => { setActiveTab(tab.type); setSearch(""); }}
+            className={cn(
+              "px-5 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px",
+              activeTab === tab.type
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {tab.label}
+            <span className={cn(
+              "ml-1.5 text-xs rounded-full px-1.5 py-0.5",
+              activeTab === tab.type ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+            )}>
+              {distributors.filter((v) => v.distributor_type === tab.type).length}
+            </span>
+          </button>
+        ))}
       </div>
 
       {/* Toolbar */}
@@ -105,9 +154,6 @@ export function DistributorsFilter({ distributors: initialDistributors, defaultT
                   업체명 <SortIcon active={sortKey === "company_name"} dir={sortDir} />
                 </button>
               </th>
-              <th className="px-4 py-3 text-left w-24">
-                <span className="text-xs font-medium text-muted-foreground">구분</span>
-              </th>
               <th className="px-4 py-3 text-left">
                 <span className="text-xs font-medium text-muted-foreground">주소</span>
               </th>
@@ -116,31 +162,25 @@ export function DistributorsFilter({ distributors: initialDistributors, defaultT
                   담당자 <SortIcon active={sortKey === "contacts"} dir={sortDir} />
                 </button>
               </th>
-              <th className="px-4 py-3 w-16" />
+              <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground w-20">상세보기</th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground w-12">삭제</th>
             </tr>
           </thead>
           <tbody>
             {sorted.length === 0 ? (
               <tr>
                 <td colSpan={5} className="text-center py-16 text-muted-foreground">
-                  검색 결과가 없습니다.
+                  {search ? "검색 결과가 없습니다." : "등록된 업체가 없습니다."}
                 </td>
               </tr>
             ) : (
               sorted.map((v) => (
                 <tr key={v.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                   <td className="px-4 py-3">
-                    <Link href={`/distributors/${v.id}`} className="font-medium hover:underline">
-                      {v.company_name}
-                    </Link>
+                    <span className="font-medium">{v.company_name}</span>
                     {v.note && (
                       <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{v.note}</p>
                     )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge variant="outline" className="text-xs whitespace-nowrap">
-                      {v.distributor_type === "material" ? "마감재" : "기타"}
-                    </Badge>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground text-xs">
                     {v.address || "-"}
@@ -157,23 +197,21 @@ export function DistributorsFilter({ distributors: initialDistributors, defaultT
                       )}
                     </div>
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1">
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" asChild>
-                        <Link href={`/distributors/${v.id}`}>
-                          <ChevronRight className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                        onClick={() => handleDelete(v.id)}
-                        disabled={deletingId === v.id}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
+                  <td className="px-4 py-3 text-center">
+                    <Button variant="outline" size="sm" className="h-7 text-xs px-3" asChild>
+                      <Link href={`/distributors/${v.id}`}>상세보기</Link>
+                    </Button>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                      onClick={() => handleDelete(v.id)}
+                      disabled={deletingId === v.id}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                   </td>
                 </tr>
               ))

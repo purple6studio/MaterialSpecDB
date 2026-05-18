@@ -30,7 +30,7 @@ export default async function MaterialDetailPage({ params }: Props) {
     .map((r) => ({ spec: r, project: r.project! }));
 
   return (
-    <div className="p-8 max-w-3xl mx-auto">
+    <div className="p-8">
       {/* Breadcrumb */}
       <Button variant="ghost" size="sm" className="mb-6 -ml-2 gap-2 text-muted-foreground" asChild>
         <Link href="/materials">
