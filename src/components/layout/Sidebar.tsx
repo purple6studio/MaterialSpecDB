@@ -14,6 +14,7 @@ import {
   Package,
   Truck,
   Wrench,
+  Settings2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -87,21 +88,28 @@ export function Sidebar() {
   const pathname = usePathname();
   const [materialsOpenPref, setMaterialsOpenPref] = useState(false);
   const [distributorsOpenPref, setDistributorsOpenPref] = useState(false);
+  const [masterOpenPref, setMasterOpenPref] = useState(false);
 
-  const onMaterialsPath = pathname.startsWith("/materials");
-  const onDistributorsPath = pathname.startsWith("/distributors");
+  const onMaterialsPath = pathname.startsWith("/materials") && !pathname.startsWith("/materials/categories");
+  const onDistributorsPath = pathname.startsWith("/distributors") && !pathname.startsWith("/distributors/types");
+  const onMasterPath = pathname.startsWith("/materials/categories") || pathname.startsWith("/distributors/types");
+
   const materialsOpen = materialsOpenPref || onMaterialsPath;
   const distributorsOpen = distributorsOpenPref || onDistributorsPath;
+  const masterOpen = masterOpenPref || onMasterPath;
 
   const materialSubItems = [
-    { label: "카테고리 관리", href: "/materials/categories", icon: Tag },
-    { label: "마감재 등록", href: "/materials", icon: Package, exact: true },
+    { label: "마감재 라이브러리", href: "/materials", icon: Package, exact: true },
   ];
 
   const distributorSubItems = [
     { label: "마감재 업체", href: "/distributors/material", icon: Truck },
     { label: "기타 업체", href: "/distributors/other", icon: Wrench },
-    { label: "업체 구분 관리", href: "/distributors/types", icon: Tag },
+  ];
+
+  const masterSubItems = [
+    { label: "카테고리 관리", href: "/materials/categories", icon: Tag },
+    { label: "업체 구분 관리", href: "/distributors/types", icon: Building2 },
   ];
 
   const bottomNavItems = [
@@ -154,15 +162,17 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="border-t px-6 py-4">
-        <p className="text-[11px] text-muted-foreground">
-          PRD v1.3 · Dummy Data Mode
-        </p>
-        <div className="mt-1 flex items-center gap-1.5">
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400" />
-          <span className="text-[11px] text-muted-foreground">Supabase 연동 중</span>
-        </div>
+      {/* 기준정보 관리 — 하단 고정 */}
+      <div className="border-t px-3 py-3">
+        <CollapsibleMenu
+          icon={Settings2}
+          label="기준정보 관리"
+          isActive={onMasterPath}
+          isOpen={masterOpen}
+          onToggle={() => setMasterOpenPref((v) => !v)}
+          subItems={masterSubItems}
+          pathname={pathname}
+        />
       </div>
     </aside>
   );
