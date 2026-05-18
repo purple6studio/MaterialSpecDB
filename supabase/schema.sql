@@ -24,10 +24,7 @@ CREATE TABLE IF NOT EXISTS distributors (
   id                TEXT PRIMARY KEY,
   distributor_type  TEXT NOT NULL CHECK (distributor_type IN ('material', 'other')),
   company_name      TEXT NOT NULL,
-  specialty         TEXT,
   address           TEXT,
-  phone             TEXT,
-  email             TEXT,
   note              TEXT
 );
 

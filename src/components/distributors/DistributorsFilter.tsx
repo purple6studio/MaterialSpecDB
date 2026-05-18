@@ -2,23 +2,15 @@
 
 import { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
-import { Search, Phone, Mail, Users, ExternalLink, Trash2 } from "lucide-react";
+import { Search, Users, ExternalLink, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SortIcon } from "@/components/ui/sort-icon";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { deleteDistributor } from "@/lib/actions";
 import { AddDistributorModal } from "@/components/distributors/AddDistributorModal";
 import type { Distributor } from "@/types";
 
-type SortKey = "company_name" | "specialty" | "contacts";
+type SortKey = "company_name" | "contacts";
 type SortDir = "asc" | "desc";
 
 interface Props {
@@ -26,10 +18,9 @@ interface Props {
   specialties: string[];
 }
 
-export function DistributorsFilter({ distributors: initialDistributors, specialties }: Props) {
+export function DistributorsFilter({ distributors: initialDistributors }: Props) {
   const [distributors, setDistributors] = useState<Distributor[]>(initialDistributors);
   const [search, setSearch] = useState("");
-  const [specialty, setSpecialty] = useState("all");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   const [sortKey, setSortKey] = useState<SortKey>("company_name");
@@ -49,38 +40,36 @@ export function DistributorsFilter({ distributors: initialDistributors, specialt
     });
   }
 
+  function handleAddSuccess(d: Distributor) {
+    setDistributors((prev) => [...prev, d]);
+  }
+
   const filtered = useMemo(() => {
     return distributors.filter((v) => {
       const q = search.toLowerCase();
-      const matchSearch =
+      return (
         !q ||
         v.company_name.toLowerCase().includes(q) ||
-        v.address.toLowerCase().includes(q) ||
-        v.contacts.some((c) => c.name.toLowerCase().includes(q) || c.role.toLowerCase().includes(q));
-      const matchSpec = specialty === "all" || v.specialty === specialty;
-      return matchSearch && matchSpec;
+        (v.address ?? "").toLowerCase().includes(q) ||
+        v.contacts.some((c) => c.name.toLowerCase().includes(q) || c.role.toLowerCase().includes(q))
+      );
     });
-  }, [distributors, search, specialty]);
+  }, [distributors, search]);
 
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
-      let cmp = 0;
-      if (sortKey === "company_name") cmp = a.company_name.localeCompare(b.company_name, "ko");
-      else if (sortKey === "specialty") cmp = (a.specialty ?? "").localeCompare(b.specialty ?? "", "ko");
-      else cmp = a.contacts.length - b.contacts.length;
+      const cmp =
+        sortKey === "company_name"
+          ? a.company_name.localeCompare(b.company_name, "ko")
+          : a.contacts.length - b.contacts.length;
       return sortDir === "asc" ? cmp : -cmp;
     });
   }, [filtered, sortKey, sortDir]);
 
   const sortOptions: { key: SortKey; label: string }[] = [
     { key: "company_name", label: "업체명" },
-    { key: "specialty", label: "전문분야" },
     { key: "contacts", label: "담당자 수" },
   ];
-
-  function handleAddSuccess(d: Distributor) {
-    setDistributors((prev) => [...prev, d]);
-  }
 
   return (
     <>
@@ -104,17 +93,6 @@ export function DistributorsFilter({ distributors: initialDistributors, specialt
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <Select value={specialty} onValueChange={setSpecialty}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="전문 분야" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">전체 분야</SelectItem>
-            {specialties.map((s) => (
-              <SelectItem key={s} value={s}>{s}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
 
         {/* Sort buttons */}
         <div className="flex items-center gap-1 border rounded-lg px-2 py-1">
@@ -156,28 +134,20 @@ export function DistributorsFilter({ distributors: initialDistributors, specialt
                   </Link>
                   <p className="text-xs text-muted-foreground mt-0.5">{v.address}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">{v.specialty}</Badge>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                    onClick={() => handleDelete(v.id)}
-                    disabled={deletingId === v.id}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                  onClick={() => handleDelete(v.id)}
+                  disabled={deletingId === v.id}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
               </div>
 
               {v.note && (
                 <p className="text-xs text-muted-foreground leading-relaxed mb-3 line-clamp-2">{v.note}</p>
               )}
-
-              <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-                <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{v.phone}</span>
-                <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{v.email}</span>
-              </div>
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

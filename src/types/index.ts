@@ -29,10 +29,7 @@ export interface Distributor {
   id: string;
   distributor_type: DistributorType;
   company_name: string;
-  specialty: string;
   address: string;
-  phone: string;
-  email: string;
   note: string;
   contacts: DistributorContact[];
 }

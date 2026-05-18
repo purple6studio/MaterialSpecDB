@@ -42,10 +42,7 @@ export function AddDistributorModal({ onSuccess }: Props) {
           id,
           distributor_type: (formData.get("distributor_type") as DistributorType) || "material",
           company_name: (formData.get("company_name") as string) || "",
-          specialty: (formData.get("specialty") as string) || "",
           address: (formData.get("address") as string) || "",
-          phone: (formData.get("phone") as string) || "",
-          email: (formData.get("email") as string) || "",
           note: (formData.get("note") as string) || "",
           contacts: [],
         });
@@ -70,28 +67,22 @@ export function AddDistributorModal({ onSuccess }: Props) {
           <DialogTitle>업체 등록</DialogTitle>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4 px-6 pb-6">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">업체 구분 *</label>
-              <Select
-                value={distributorType}
-                onValueChange={setDistributorType}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="구분 선택" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="material">마감재 업체</SelectItem>
-                  <SelectItem value="other">기타 업체</SelectItem>
-                </SelectContent>
-              </Select>
-              <input type="hidden" name="distributor_type" value={distributorType} />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">전문 분야</label>
-              <Input name="specialty" placeholder="예: Paint, Tile" />
-            </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">업체 구분 *</label>
+            <Select
+              value={distributorType}
+              onValueChange={setDistributorType}
+              required
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="구분 선택" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="material">마감재 업체</SelectItem>
+                <SelectItem value="other">기타 업체</SelectItem>
+              </SelectContent>
+            </Select>
+            <input type="hidden" name="distributor_type" value={distributorType} />
           </div>
 
           <div className="space-y-1.5">
@@ -102,17 +93,6 @@ export function AddDistributorModal({ onSuccess }: Props) {
           <div className="space-y-1.5">
             <label className="text-sm font-medium">주소</label>
             <Input name="address" placeholder="주소 입력" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">전화</label>
-              <Input name="phone" placeholder="02-0000-0000" />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">이메일</label>
-              <Input name="email" type="email" placeholder="example@co.kr" />
-            </div>
           </div>
 
           <div className="space-y-1.5">

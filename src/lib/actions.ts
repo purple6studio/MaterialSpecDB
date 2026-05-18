@@ -46,10 +46,7 @@ export async function createDistributor(
     id: (formData.get("id") as string) || crypto.randomUUID(),
     distributor_type: formData.get("distributor_type") as string,
     company_name: formData.get("company_name") as string,
-    specialty: (formData.get("specialty") as string) || null,
     address: (formData.get("address") as string) || null,
-    phone: (formData.get("phone") as string) || null,
-    email: (formData.get("email") as string) || null,
     note: (formData.get("note") as string) || null,
   });
   if (error) return { success: false, error: error.message };

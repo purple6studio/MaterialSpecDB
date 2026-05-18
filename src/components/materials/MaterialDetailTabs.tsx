@@ -80,7 +80,7 @@ export function MaterialDetailTabs({ material, category, distributors, relatedPr
                       </Link>
                       <p className="text-xs text-muted-foreground mt-0.5">{v.address}</p>
                     </div>
-                    <Badge variant="outline">{v.specialty}</Badge>
+                    <Badge variant="outline">{v.distributor_type === "material" ? "마감재 업체" : "기타 업체"}</Badge>
                   </div>
                   <Separator className="mb-3" />
                   <div className="space-y-1.5">

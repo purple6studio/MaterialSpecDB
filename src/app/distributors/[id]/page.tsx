@@ -51,19 +51,17 @@ export default async function DistributorDetailPage({ params }: Props) {
       <div className="flex items-start justify-between mb-8">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <Badge variant="outline">{distributor.specialty}</Badge>
+            <Badge variant="outline">
+              {distributor.distributor_type === "material" ? "마감재 업체" : "기타 업체"}
+            </Badge>
           </div>
           <h1 className="text-2xl font-bold tracking-tight">{distributor.company_name}</h1>
-          <p className="flex items-center gap-1.5 text-muted-foreground text-sm mt-1">
-            <MapPin className="h-3.5 w-3.5" />
-            {distributor.address}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="gap-2">
-            <Phone className="h-3.5 w-3.5" />
-            {distributor.phone}
-          </Button>
+          {distributor.address && (
+            <p className="flex items-center gap-1.5 text-muted-foreground text-sm mt-1">
+              <MapPin className="h-3.5 w-3.5" />
+              {distributor.address}
+            </p>
+          )}
         </div>
       </div>
 
@@ -176,27 +174,21 @@ export default async function DistributorDetailPage({ params }: Props) {
           </Card>
         </div>
 
-        {/* Right: Contact info + Projects */}
+        {/* Right: Address + Projects */}
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">연락처</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Phone className="h-4 w-4 shrink-0" />
-                <span>{distributor.phone}</span>
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Mail className="h-4 w-4 shrink-0" />
-                <span className="break-all">{distributor.email}</span>
-              </div>
-              <div className="flex items-start gap-2 text-muted-foreground">
-                <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
-                <span className="leading-relaxed">{distributor.address}</span>
-              </div>
-            </CardContent>
-          </Card>
+          {distributor.address && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">주소</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm">
+                <div className="flex items-start gap-2 text-muted-foreground">
+                  <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span className="leading-relaxed">{distributor.address}</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>
