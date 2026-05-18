@@ -18,7 +18,11 @@ export default function RootLayout({
       <body className="antialiased">
         <Header />
         <Sidebar />
-        <main className="ml-72 min-h-screen bg-background pt-14">{children}</main>
+        <main className="ml-72 min-h-screen bg-background pt-14">
+          <div className="max-w-[1280px] mx-auto">
+            {children}
+          </div>
+        </main>
       </body>
     </html>
   );

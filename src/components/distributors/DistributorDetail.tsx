@@ -186,7 +186,7 @@ export function DistributorDetail({
 
   // ── Render ────────────────────────────────────────────
   return (
-    <div className="p-8 max-w-4xl space-y-10">
+    <div className="p-8 max-w-4xl mx-auto space-y-10">
       {/* Breadcrumb */}
       <Button variant="ghost" size="sm" className="-ml-2 gap-2 text-muted-foreground" asChild>
         <Link href="/distributors">
