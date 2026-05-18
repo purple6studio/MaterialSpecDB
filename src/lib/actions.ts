@@ -143,6 +143,104 @@ export async function updateMaterialCategory(
   return { success: true };
 }
 
+// ── 담당자 CRUD ──────────────────────────────────────────────────────────────
+
+export async function createDistributorContact(
+  distributorId: string,
+  id: string,
+  data: { name: string; role: string; phone: string; email: string }
+): Promise<ActionState> {
+  const { error } = await supabase.from("distributor_contacts").insert({
+    id,
+    distributor_id: distributorId,
+    name: data.name.trim(),
+    role: data.role.trim() || null,
+    phone: data.phone.trim() || null,
+    email: data.email.trim() || null,
+  });
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+export async function updateDistributorContact(
+  id: string,
+  data: { name: string; role: string; phone: string; email: string }
+): Promise<ActionState> {
+  const { error } = await supabase
+    .from("distributor_contacts")
+    .update({
+      name: data.name.trim(),
+      role: data.role.trim() || null,
+      phone: data.phone.trim() || null,
+      email: data.email.trim() || null,
+    })
+    .eq("id", id);
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+export async function deleteDistributorContact(id: string): Promise<ActionState> {
+  const { error } = await supabase.from("distributor_contacts").delete().eq("id", id);
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+// ── 마감재 ↔ 업체 링크 ──────────────────────────────────────────────────────
+
+export async function addMaterialToDistributor(
+  distributorId: string,
+  materialId: string
+): Promise<ActionState> {
+  const { error } = await supabase
+    .from("material_distributor_links")
+    .upsert({ material_id: materialId, distributor_id: distributorId });
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+export async function removeMaterialFromDistributor(
+  distributorId: string,
+  materialId: string
+): Promise<ActionState> {
+  const { error } = await supabase
+    .from("material_distributor_links")
+    .delete()
+    .eq("material_id", materialId)
+    .eq("distributor_id", distributorId);
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+// ── 프로젝트 ↔ 업체 링크 (project_specs 경유) ────────────────────────────────
+
+export async function addProjectToDistributor(
+  distributorId: string,
+  projectId: string
+): Promise<ActionState> {
+  const { error } = await supabase.from("project_specs").insert({
+    id: crypto.randomUUID(),
+    project_id: projectId,
+    distributor_id: distributorId,
+  });
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+export async function removeProjectFromDistributor(
+  distributorId: string,
+  projectId: string
+): Promise<ActionState> {
+  const { error } = await supabase
+    .from("project_specs")
+    .delete()
+    .eq("project_id", projectId)
+    .eq("distributor_id", distributorId);
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export async function createProject(
   prevState: ActionState,
   formData: FormData
