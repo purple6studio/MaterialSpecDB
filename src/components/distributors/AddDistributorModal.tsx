@@ -23,11 +23,12 @@ import type { Distributor, DistributorType } from "@/types";
 
 interface Props {
   onSuccess?: (distributor: Distributor) => void;
+  defaultType?: DistributorType;
 }
 
-export function AddDistributorModal({ onSuccess }: Props) {
+export function AddDistributorModal({ onSuccess, defaultType }: Props) {
   const [open, setOpen] = useState(false);
-  const [distributorType, setDistributorType] = useState<string>("");
+  const [distributorType, setDistributorType] = useState<string>(defaultType ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -67,23 +68,23 @@ export function AddDistributorModal({ onSuccess }: Props) {
           <DialogTitle>업체 등록</DialogTitle>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4 px-6 pb-6">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">업체 구분 *</label>
-            <Select
-              value={distributorType}
-              onValueChange={setDistributorType}
-              required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="구분 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="material">마감재 업체</SelectItem>
-                <SelectItem value="other">기타 업체</SelectItem>
-              </SelectContent>
-            </Select>
-            <input type="hidden" name="distributor_type" value={distributorType} />
-          </div>
+          {defaultType ? (
+            <input type="hidden" name="distributor_type" value={defaultType} />
+          ) : (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">업체 구분 *</label>
+              <Select value={distributorType} onValueChange={setDistributorType} required>
+                <SelectTrigger>
+                  <SelectValue placeholder="구분 선택" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="material">마감재 업체</SelectItem>
+                  <SelectItem value="other">기타 업체</SelectItem>
+                </SelectContent>
+              </Select>
+              <input type="hidden" name="distributor_type" value={distributorType} />
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium">업체명 *</label>
@@ -112,7 +113,7 @@ export function AddDistributorModal({ onSuccess }: Props) {
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               취소
             </Button>
-            <Button type="submit" disabled={pending || !distributorType}>
+            <Button type="submit" disabled={pending || (!defaultType && !distributorType)}>
               {pending ? "등록 중..." : "등록"}
             </Button>
           </div>

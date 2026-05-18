@@ -9,7 +9,7 @@ export default async function OtherDistributorsPage() {
 
   return (
     <div className="p-8">
-      <DistributorsFilter distributors={distributors} specialties={[]} />
+      <DistributorsFilter distributors={distributors} specialties={[]} defaultType="other" />
     </div>
   );
 }

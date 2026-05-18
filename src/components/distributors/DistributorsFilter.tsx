@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { SortIcon } from "@/components/ui/sort-icon";
 import { deleteDistributor } from "@/lib/actions";
 import { AddDistributorModal } from "@/components/distributors/AddDistributorModal";
-import type { Distributor } from "@/types";
+import type { Distributor, DistributorType } from "@/types";
 
 type SortKey = "company_name" | "contacts";
 type SortDir = "asc" | "desc";
@@ -16,9 +16,10 @@ type SortDir = "asc" | "desc";
 interface Props {
   distributors: Distributor[];
   specialties: string[];
+  defaultType?: DistributorType;
 }
 
-export function DistributorsFilter({ distributors: initialDistributors }: Props) {
+export function DistributorsFilter({ distributors: initialDistributors, defaultType }: Props) {
   const [distributors, setDistributors] = useState<Distributor[]>(initialDistributors);
   const [search, setSearch] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -79,7 +80,7 @@ export function DistributorsFilter({ distributors: initialDistributors }: Props)
           <h1 className="text-2xl font-bold tracking-tight">업체</h1>
           <p className="text-muted-foreground mt-1">자재 공급 및 시공 협력 업체 관리</p>
         </div>
-        <AddDistributorModal onSuccess={handleAddSuccess} />
+        <AddDistributorModal onSuccess={handleAddSuccess} defaultType={defaultType} />
       </div>
 
       {/* Toolbar */}
