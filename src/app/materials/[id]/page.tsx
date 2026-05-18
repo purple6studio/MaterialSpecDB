@@ -53,7 +53,6 @@ export default async function MaterialDetailPage({ params }: Props) {
             )}
           </div>
           <h1 className="text-2xl font-bold tracking-tight">{material.material_item}</h1>
-          <p className="text-muted-foreground font-mono text-sm mt-1">{material.material_code}</p>
         </div>
       </div>
 

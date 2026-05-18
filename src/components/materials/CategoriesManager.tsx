@@ -1,12 +1,12 @@
 "use client";
 
 import { useTransition, useState, useMemo } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Pencil, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SortIcon } from "@/components/ui/sort-icon";
-import { createMaterialCategory, deleteMaterialCategory } from "@/lib/actions";
+import { createMaterialCategory, deleteMaterialCategory, updateMaterialCategory } from "@/lib/actions";
 import type { MaterialCategory } from "@/types";
 
 type SortKey = "code_prefix" | "category_eng" | "category_kor";
@@ -25,6 +25,11 @@ export function CategoriesManager({ initialCategories }: Props) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("code_prefix");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+
+  // 인라인 수정 state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ code_prefix: "", category_eng: "", category_kor: "" });
+  const [updatePending, startUpdate] = useTransition();
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -86,6 +91,42 @@ export function CategoriesManager({ initialCategories }: Props) {
         setCategories((prev) => prev.filter((c) => c.id !== id));
       }
       setDeletingId(null);
+    });
+  }
+
+  function startEdit(c: MaterialCategory) {
+    setEditingId(c.id);
+    setEditForm({ code_prefix: c.code_prefix, category_eng: c.category_eng, category_kor: c.category_kor });
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+  }
+
+  function handleUpdate(id: string) {
+    // 중복 코드 검증 (자기 자신 제외)
+    const isDuplicate = categories.some(
+      (c) => c.id !== id && c.code_prefix.toUpperCase() === editForm.code_prefix.toUpperCase().trim()
+    );
+    if (isDuplicate) return;
+
+    startUpdate(async () => {
+      const result = await updateMaterialCategory(id, editForm);
+      if (result?.success) {
+        setCategories((prev) =>
+          prev.map((c) =>
+            c.id === id
+              ? {
+                  ...c,
+                  code_prefix: editForm.code_prefix.toUpperCase().trim(),
+                  category_eng: editForm.category_eng.toUpperCase().trim(),
+                  category_kor: editForm.category_kor.trim(),
+                }
+              : c
+          )
+        );
+        setEditingId(null);
+      }
     });
   }
 
@@ -180,7 +221,9 @@ export function CategoriesManager({ initialCategories }: Props) {
                   한글명 <SortIcon active={sortKey === "category_kor"} dir={sortDir} />
                 </button>
               </th>
-              <th className="px-4 py-3 w-12" />
+              <th className="px-4 py-3 w-28 text-right text-xs font-medium text-muted-foreground">
+                수정/삭제
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -191,24 +234,91 @@ export function CategoriesManager({ initialCategories }: Props) {
                 </td>
               </tr>
             ) : (
-              sorted.map((c) => (
-                <tr key={c.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                  <td className="px-4 py-3 font-mono font-medium">{c.code_prefix}</td>
-                  <td className="px-4 py-3 font-medium">{c.category_eng}</td>
-                  <td className="px-4 py-3">{c.category_kor}</td>
-                  <td className="px-4 py-3">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                      onClick={() => handleDelete(c.id)}
-                      disabled={deletingId === c.id}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </td>
-                </tr>
-              ))
+              sorted.map((c) => {
+                const isEditing = editingId === c.id;
+                return (
+                  <tr key={c.id} className={`border-b last:border-0 transition-colors ${isEditing ? "bg-muted/20" : "hover:bg-muted/30"}`}>
+                    <td className="px-4 py-2.5">
+                      {isEditing ? (
+                        <Input
+                          value={editForm.code_prefix}
+                          onChange={(e) => setEditForm((f) => ({ ...f, code_prefix: e.target.value }))}
+                          className="h-7 text-xs font-mono"
+                        />
+                      ) : (
+                        <span className="font-mono font-medium">{c.code_prefix}</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      {isEditing ? (
+                        <Input
+                          value={editForm.category_eng}
+                          onChange={(e) => setEditForm((f) => ({ ...f, category_eng: e.target.value }))}
+                          className="h-7 text-xs"
+                        />
+                      ) : (
+                        <span className="font-medium">{c.category_eng}</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      {isEditing ? (
+                        <Input
+                          value={editForm.category_kor}
+                          onChange={(e) => setEditForm((f) => ({ ...f, category_kor: e.target.value }))}
+                          className="h-7 text-xs"
+                        />
+                      ) : (
+                        <span>{c.category_kor}</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center justify-end gap-1">
+                        {isEditing ? (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-primary hover:text-primary"
+                              onClick={() => handleUpdate(c.id)}
+                              disabled={updatePending}
+                            >
+                              <Check className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground"
+                              onClick={cancelEdit}
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              onClick={() => startEdit(c)}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                              onClick={() => handleDelete(c.id)}
+                              disabled={deletingId === c.id}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

@@ -56,7 +56,6 @@ export function MaterialsFilter({ materials: initialMaterials, categories }: Pro
       const matchSearch =
         !q ||
         m.material_item.toLowerCase().includes(q) ||
-        m.material_code.toLowerCase().includes(q) ||
         (cat?.category_eng ?? "").toLowerCase().includes(q) ||
         (cat?.category_kor ?? "").includes(q);
       const matchCat = selectedCat === "all" || m.category_id === selectedCat;
@@ -102,7 +101,7 @@ export function MaterialsFilter({ materials: initialMaterials, categories }: Pro
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="자재명, 코드, 카테고리 검색..."
+            placeholder="자재명, 카테고리 검색..."
             className="pl-9"
             value={search}
             onChange={(e) => setSearch(e.target.value)}

@@ -11,3 +11,6 @@ CREATE POLICY "anon delete" ON material_categories FOR DELETE USING (true);
 CREATE POLICY "anon delete" ON materials           FOR DELETE USING (true);
 CREATE POLICY "anon delete" ON distributors        FOR DELETE USING (true);
 CREATE POLICY "anon delete" ON projects            FOR DELETE USING (true);
+
+-- UPDATE 권한 (카테고리 수정)
+CREATE POLICY "anon update" ON material_categories FOR UPDATE USING (true) WITH CHECK (true);

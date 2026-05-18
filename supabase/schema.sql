@@ -13,7 +13,6 @@ CREATE TABLE IF NOT EXISTS material_categories (
 CREATE TABLE IF NOT EXISTS materials (
   id              TEXT PRIMARY KEY,
   category_id     TEXT REFERENCES material_categories(id) ON DELETE SET NULL,
-  material_code   TEXT NOT NULL,
   material_item   TEXT NOT NULL,
   material_finish TEXT,
   material_size   TEXT,

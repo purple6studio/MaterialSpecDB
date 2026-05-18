@@ -136,7 +136,6 @@ export default async function DistributorDetailPage({ params }: Props) {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left font-medium text-muted-foreground pb-2 w-24">코드</th>
                       <th className="text-left font-medium text-muted-foreground pb-2">자재명</th>
                       <th className="text-left font-medium text-muted-foreground pb-2">카테고리</th>
                       <th className="text-left font-medium text-muted-foreground pb-2">마감</th>
@@ -148,7 +147,6 @@ export default async function DistributorDetailPage({ params }: Props) {
                       const category = categoryMap.get(m.category_id);
                       return (
                         <tr key={m.id} className="border-b last:border-0">
-                          <td className="py-2.5 font-mono text-xs">{m.material_code}</td>
                           <td className="py-2.5 font-medium">{m.material_item}</td>
                           <td className="py-2.5">
                             {category ? (

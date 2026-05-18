@@ -50,14 +50,13 @@ export function MaterialDetailTabs({ material, category, distributors, relatedPr
           <CardContent className="pt-6">
             <dl className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm">
               {[
-                { label: "코드",       value: material.material_code, mono: true },
                 { label: "카테고리",   value: category ? `${category.category_kor} (${category.category_eng})` : "-" },
                 { label: "마감",       value: material.material_finish || "-" },
                 { label: "크기",       value: material.material_size || "-" },
-              ].map(({ label, value, mono }) => (
+              ].map(({ label, value }) => (
                 <div key={label}>
                   <dt className="text-muted-foreground mb-0.5">{label}</dt>
-                  <dd className={`font-medium ${mono ? "font-mono text-xs" : ""}`}>{value}</dd>
+                  <dd className="font-medium">{value}</dd>
                 </div>
               ))}
             </dl>

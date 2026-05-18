@@ -74,9 +74,6 @@ export default async function ProjectDetailPage({ params }: Props) {
                       <td className="py-3 text-muted-foreground">{idx + 1}</td>
                       <td className="py-3">
                         <div className="font-medium">{material?.material_item ?? item.material_id}</div>
-                        {material && (
-                          <div className="text-xs text-muted-foreground font-mono">{material.material_code}</div>
-                        )}
                       </td>
                       <td className="py-3">
                         {category ? (

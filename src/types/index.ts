@@ -8,7 +8,6 @@ export interface MaterialCategory {
 export interface Material {
   id: string;
   category_id: string;
-  material_code: string;
   material_item: string;
   material_finish: string;
   material_size: string;

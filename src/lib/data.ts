@@ -2,7 +2,7 @@ import { supabase } from "./supabase";
 import type { Material, MaterialCategory, Distributor, Project, ProjectSpec } from "@/types";
 
 export async function getMaterials(): Promise<Material[]> {
-  const { data, error } = await supabase.from("materials").select("*").order("material_code");
+  const { data, error } = await supabase.from("materials").select("*").order("material_item");
   if (error) throw error;
   return data;
 }
