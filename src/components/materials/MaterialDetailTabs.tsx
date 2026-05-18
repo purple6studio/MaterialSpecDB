@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Building2, Phone, Mail, FolderOpen, Tag } from "lucide-react";
-import type { Material, MaterialCategory, Vendor, ProjectSpec, Project } from "@/types";
+import type { Material, MaterialCategory, Distributor, ProjectSpec, Project } from "@/types";
 
 interface RelatedProject {
   spec: ProjectSpec;
@@ -16,11 +16,11 @@ interface RelatedProject {
 interface Props {
   material: Material;
   category: MaterialCategory | undefined;
-  vendors: Vendor[];
+  distributors: Distributor[];
   relatedProjects: RelatedProject[];
 }
 
-export function MaterialDetailTabs({ material, category, vendors, relatedProjects }: Props) {
+export function MaterialDetailTabs({ material, category, distributors, relatedProjects }: Props) {
   return (
     <Tabs defaultValue="spec">
       <TabsList variant="line">
@@ -28,11 +28,11 @@ export function MaterialDetailTabs({ material, category, vendors, relatedProject
           <Tag className="h-4 w-4" />
           자재 스펙
         </TabsTrigger>
-        <TabsTrigger value="vendors">
+        <TabsTrigger value="distributors">
           <Building2 className="h-4 w-4" />
-          공급업체
+          업체
           <span className="ml-1 rounded-full bg-muted px-1.5 py-px text-[10px] font-semibold text-muted-foreground">
-            {vendors.length}
+            {distributors.length}
           </span>
         </TabsTrigger>
         <TabsTrigger value="projects">
@@ -65,18 +65,18 @@ export function MaterialDetailTabs({ material, category, vendors, relatedProject
         </Card>
       </TabsContent>
 
-      {/* 공급업체 */}
-      <TabsContent value="vendors">
+      {/* 업체 */}
+      <TabsContent value="distributors">
         <div className="space-y-4">
-          {vendors.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-8 text-center">등록된 공급업체가 없습니다.</p>
+          {distributors.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-8 text-center">등록된 업체가 없습니다.</p>
           ) : (
-            vendors.map((v) => (
+            distributors.map((v) => (
               <Card key={v.id}>
                 <CardContent className="pt-5">
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <Link href={`/vendors/${v.id}`} className="font-medium hover:underline">
+                      <Link href={`/distributors/${v.id}`} className="font-medium hover:underline">
                         {v.company_name}
                       </Link>
                       <p className="text-xs text-muted-foreground mt-0.5">{v.address}</p>

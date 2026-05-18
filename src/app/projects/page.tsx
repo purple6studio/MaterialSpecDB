@@ -1,4 +1,4 @@
-import { getProjects, getData } from "@/lib/data";
+import { getProjects, getAllProjectSpecs } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Plus, ChevronRight } from "lucide-react";
@@ -6,9 +6,8 @@ import Link from "next/link";
 
 export const metadata = { title: "프로젝트 | 마감재 DB" };
 
-export default function ProjectsPage() {
-  const projects = getProjects();
-  const data = getData();
+export default async function ProjectsPage() {
+  const [projects, allSpecs] = await Promise.all([getProjects(), getAllProjectSpecs()]);
 
   return (
     <div className="p-8">
@@ -34,7 +33,7 @@ export default function ProjectsPage() {
 
         <div className="divide-y">
           {projects.map((project) => {
-            const specCount = data.project_specs.filter(
+            const specCount = allSpecs.filter(
               (s) => s.project_id === project.id
             ).length;
 

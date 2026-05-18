@@ -15,32 +15,32 @@ export interface Material {
   material_image: string | null;
 }
 
-export interface VendorContact {
+export interface DistributorContact {
   id: string;
-  vendor_id: string;
+  distributor_id: string;
   name: string;
   role: string;
   phone: string;
   email: string;
 }
 
-export type VendorType = "material" | "other";
+export type DistributorType = "material" | "other";
 
-export interface Vendor {
+export interface Distributor {
   id: string;
-  vendor_type: VendorType;
+  distributor_type: DistributorType;
   company_name: string;
   specialty: string;
   address: string;
   phone: string;
   email: string;
   note: string;
-  contacts: VendorContact[];
+  contacts: DistributorContact[];
 }
 
-export interface MaterialVendorLink {
+export interface MaterialDistributorLink {
   material_id: string;
-  vendor_id: string;
+  distributor_id: string;
 }
 
 export interface Project {
@@ -54,15 +54,6 @@ export interface ProjectSpec {
   id: string;
   project_id: string;
   material_id: string;
-  vendor_id: string;
+  distributor_id: string;
   memo: string;
-}
-
-export interface DummyData {
-  material_categories: MaterialCategory[];
-  materials: Material[];
-  vendors: Vendor[];
-  material_vendor_links: MaterialVendorLink[];
-  projects: Project[];
-  project_specs: ProjectSpec[];
 }

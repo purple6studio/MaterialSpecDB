@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
-  getVendorById,
-  getMaterialsForVendor,
-  getMaterialCategoryById,
-  getData,
+  getDistributorById,
+  getMaterialsForDistributor,
+  getMaterialCategories,
+  getRelatedProjectsForDistributor,
 } from "@/lib/data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,32 +25,25 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
-export default async function VendorDetailPage({ params }: Props) {
+export default async function DistributorDetailPage({ params }: Props) {
   const { id } = await params;
-  const vendor = getVendorById(id);
-  if (!vendor) notFound();
+  const [distributor, materials, relatedProjects, categories] = await Promise.all([
+    getDistributorById(id),
+    getMaterialsForDistributor(id),
+    getRelatedProjectsForDistributor(id),
+    getMaterialCategories(),
+  ]);
+  if (!distributor) notFound();
 
-  const materials = getMaterialsForVendor(id);
-  const data = getData();
-
-  const relatedProjectIds = [
-    ...new Set(
-      data.project_specs
-        .filter((s) => s.vendor_id === id)
-        .map((s) => s.project_id)
-    ),
-  ];
-  const relatedProjects = relatedProjectIds
-    .map((pid) => data.projects.find((p) => p.id === pid))
-    .filter((p): p is NonNullable<typeof p> => p !== undefined);
+  const categoryMap = new Map(categories.map((c) => [c.id, c]));
 
   return (
     <div className="p-8 max-w-5xl">
       {/* Breadcrumb */}
       <Button variant="ghost" size="sm" className="mb-6 -ml-2 gap-2 text-muted-foreground" asChild>
-        <Link href="/vendors">
+        <Link href="/distributors">
           <ArrowLeft className="h-4 w-4" />
-          공급업체 목록으로
+          업체 목록으로
         </Link>
       </Button>
 
@@ -58,18 +51,18 @@ export default async function VendorDetailPage({ params }: Props) {
       <div className="flex items-start justify-between mb-8">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <Badge variant="outline">{vendor.specialty}</Badge>
+            <Badge variant="outline">{distributor.specialty}</Badge>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">{vendor.company_name}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{distributor.company_name}</h1>
           <p className="flex items-center gap-1.5 text-muted-foreground text-sm mt-1">
             <MapPin className="h-3.5 w-3.5" />
-            {vendor.address}
+            {distributor.address}
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="gap-2">
             <Phone className="h-3.5 w-3.5" />
-            {vendor.phone}
+            {distributor.phone}
           </Button>
         </div>
       </div>
@@ -78,10 +71,10 @@ export default async function VendorDetailPage({ params }: Props) {
         {/* Left */}
         <div className="col-span-2 space-y-6">
           {/* Note */}
-          {vendor.note && (
+          {distributor.note && (
             <Card>
               <CardContent className="pt-6">
-                <p className="text-sm text-muted-foreground leading-relaxed">{vendor.note}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{distributor.note}</p>
               </CardContent>
             </Card>
           )}
@@ -91,15 +84,15 @@ export default async function VendorDetailPage({ params }: Props) {
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <User className="h-4 w-4" />
-                담당자 ({vendor.contacts.length}명)
+                담당자 ({distributor.contacts.length}명)
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {vendor.contacts.length === 0 ? (
+              {distributor.contacts.length === 0 ? (
                 <p className="text-sm text-muted-foreground">등록된 담당자가 없습니다.</p>
               ) : (
                 <div className="space-y-3">
-                  {vendor.contacts.map((c, idx) => (
+                  {distributor.contacts.map((c, idx) => (
                     <div key={c.id}>
                       {idx > 0 && <Separator className="mb-3" />}
                       <div className="flex items-center gap-6">
@@ -152,7 +145,7 @@ export default async function VendorDetailPage({ params }: Props) {
                   </thead>
                   <tbody>
                     {materials.map((m) => {
-                      const category = getMaterialCategoryById(m.category_id);
+                      const category = categoryMap.get(m.category_id);
                       return (
                         <tr key={m.id} className="border-b last:border-0">
                           <td className="py-2.5 font-mono text-xs">{m.material_code}</td>
@@ -194,15 +187,15 @@ export default async function VendorDetailPage({ params }: Props) {
             <CardContent className="space-y-3 text-sm">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Phone className="h-4 w-4 shrink-0" />
-                <span>{vendor.phone}</span>
+                <span>{distributor.phone}</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Mail className="h-4 w-4 shrink-0" />
-                <span className="break-all">{vendor.email}</span>
+                <span className="break-all">{distributor.email}</span>
               </div>
               <div className="flex items-start gap-2 text-muted-foreground">
                 <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
-                <span className="leading-relaxed">{vendor.address}</span>
+                <span className="leading-relaxed">{distributor.address}</span>
               </div>
             </CardContent>
           </Card>

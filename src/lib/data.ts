@@ -1,58 +1,128 @@
-import type { DummyData, Material, MaterialCategory, Vendor, Project } from "@/types";
-import rawData from "@/data/dummy.json";
+import { supabase } from "./supabase";
+import type { Material, MaterialCategory, Distributor, Project, ProjectSpec } from "@/types";
 
-const data = rawData as DummyData;
-
-export function getData(): DummyData {
+export async function getMaterials(): Promise<Material[]> {
+  const { data, error } = await supabase.from("materials").select("*").order("material_code");
+  if (error) throw error;
   return data;
 }
 
-export function getMaterials(): Material[] {
-  return data.materials;
+export async function getMaterialById(id: string): Promise<Material | null> {
+  const { data, error } = await supabase.from("materials").select("*").eq("id", id).single();
+  if (error) return null;
+  return data;
 }
 
-export function getMaterialById(id: string): Material | undefined {
-  return data.materials.find((m) => m.id === id);
+export async function getMaterialCategories(): Promise<MaterialCategory[]> {
+  const { data, error } = await supabase.from("material_categories").select("*").order("category_eng");
+  if (error) throw error;
+  return data;
 }
 
-export function getMaterialCategories(): MaterialCategory[] {
-  return data.material_categories;
+export async function getMaterialCategoryById(id: string): Promise<MaterialCategory | null> {
+  const { data, error } = await supabase.from("material_categories").select("*").eq("id", id).single();
+  if (error) return null;
+  return data;
 }
 
-export function getMaterialCategoryById(id: string): MaterialCategory | undefined {
-  return data.material_categories.find((c) => c.id === id);
+export async function getDistributors(): Promise<Distributor[]> {
+  const { data, error } = await supabase
+    .from("distributors")
+    .select("*, contacts:distributor_contacts(*)")
+    .order("company_name");
+  if (error) throw error;
+  return data as Distributor[];
 }
 
-export function getVendors(): Vendor[] {
-  return data.vendors;
+export async function getDistributorById(id: string): Promise<Distributor | null> {
+  const { data, error } = await supabase
+    .from("distributors")
+    .select("*, contacts:distributor_contacts(*)")
+    .eq("id", id)
+    .single();
+  if (error) return null;
+  return data as Distributor;
 }
 
-export function getVendorById(id: string): Vendor | undefined {
-  return data.vendors.find((v) => v.id === id);
+export async function getProjects(): Promise<Project[]> {
+  const { data, error } = await supabase
+    .from("projects")
+    .select("*")
+    .order("project_year", { ascending: false });
+  if (error) throw error;
+  return data;
 }
 
-export function getProjects(): Project[] {
-  return data.projects;
+export async function getProjectById(id: string): Promise<Project | null> {
+  const { data, error } = await supabase.from("projects").select("*").eq("id", id).single();
+  if (error) return null;
+  return data;
 }
 
-export function getProjectById(id: string): Project | undefined {
-  return data.projects.find((p) => p.id === id);
+export async function getDistributorsForMaterial(materialId: string): Promise<Distributor[]> {
+  const { data, error } = await supabase
+    .from("material_distributor_links")
+    .select("distributor:distributors(*, contacts:distributor_contacts(*))")
+    .eq("material_id", materialId);
+  if (error) throw error;
+  return (data.map((row) => row.distributor).filter(Boolean)) as unknown as Distributor[];
 }
 
-export function getVendorsForMaterial(materialId: string): Vendor[] {
-  const links = data.material_vendor_links.filter(
-    (l) => l.material_id === materialId
-  );
-  return links
-    .map((l) => data.vendors.find((v) => v.id === l.vendor_id))
-    .filter((v): v is Vendor => v !== undefined);
+export async function getMaterialsForDistributor(distributorId: string): Promise<Material[]> {
+  const { data, error } = await supabase
+    .from("material_distributor_links")
+    .select("material:materials(*)")
+    .eq("distributor_id", distributorId);
+  if (error) throw error;
+  return (data.map((row) => row.material).filter(Boolean)) as unknown as Material[];
 }
 
-export function getMaterialsForVendor(vendorId: string): Material[] {
-  const links = data.material_vendor_links.filter(
-    (l) => l.vendor_id === vendorId
-  );
-  return links
-    .map((l) => data.materials.find((m) => m.id === l.material_id))
-    .filter((m): m is Material => m !== undefined);
+export async function getAllProjectSpecs(): Promise<ProjectSpec[]> {
+  const { data, error } = await supabase.from("project_specs").select("*");
+  if (error) throw error;
+  return data;
+}
+
+// 프로젝트 상세 페이지: specs + 중첩된 material(category 포함) + distributor를 한 번에 조회
+export async function getProjectSpecsWithDetails(projectId: string) {
+  const { data, error } = await supabase
+    .from("project_specs")
+    .select(`
+      *,
+      material:materials(*, category:material_categories(*)),
+      distributor:distributors(id, company_name)
+    `)
+    .eq("project_id", projectId);
+  if (error) throw error;
+  return data as Array<
+    ProjectSpec & {
+      material: (Material & { category: MaterialCategory | null }) | null;
+      distributor: Pick<Distributor, "id" | "company_name"> | null;
+    }
+  >;
+}
+
+// 마감재 상세 페이지: 연관 프로젝트 조회
+export async function getProjectSpecsWithProjectForMaterial(materialId: string) {
+  const { data, error } = await supabase
+    .from("project_specs")
+    .select("*, project:projects(*)")
+    .eq("material_id", materialId);
+  if (error) throw error;
+  return data as Array<ProjectSpec & { project: Project | null }>;
+}
+
+// 업체 상세 페이지: 연관 프로젝트 조회 (중복 제거)
+export async function getRelatedProjectsForDistributor(distributorId: string): Promise<Project[]> {
+  const { data, error } = await supabase
+    .from("project_specs")
+    .select("project:projects(*)")
+    .eq("distributor_id", distributorId);
+  if (error) throw error;
+  const seen = new Set<string>();
+  return (data.map((row) => row.project).filter(Boolean) as unknown as Project[]).filter((p) => {
+    if (seen.has(p.id)) return false;
+    seen.add(p.id);
+    return true;
+  });
 }

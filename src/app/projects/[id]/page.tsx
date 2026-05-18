@@ -1,12 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import {
-  getProjectById,
-  getMaterialById,
-  getVendorById,
-  getMaterialCategoryById,
-} from "@/lib/data";
-import { getData } from "@/lib/data";
+import { getProjectById, getProjectSpecsWithDetails } from "@/lib/data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,17 +15,11 @@ interface Props {
 
 export default async function ProjectDetailPage({ params }: Props) {
   const { id } = await params;
-  const project = getProjectById(id);
+  const [project, specItems] = await Promise.all([
+    getProjectById(id),
+    getProjectSpecsWithDetails(id),
+  ]);
   if (!project) notFound();
-
-  const data = getData();
-  const specs = data.project_specs.filter((s) => s.project_id === id);
-
-  const specItems = specs.map((spec) => ({
-    spec,
-    material: getMaterialById(spec.material_id),
-    vendor: getVendorById(spec.vendor_id),
-  }));
 
   return (
     <div className="p-8 max-w-5xl">
@@ -57,7 +45,7 @@ export default async function ProjectDetailPage({ params }: Props) {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
-            스펙북 ({specs.length}개 자재)
+            스펙북 ({specItems.length}개 자재)
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -78,13 +66,14 @@ export default async function ProjectDetailPage({ params }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {specItems.map(({ spec, material, vendor }, idx) => {
-                  const category = material ? getMaterialCategoryById(material.category_id) : undefined;
+                {specItems.map((item, idx) => {
+                  const { material, distributor } = item;
+                  const category = material?.category ?? null;
                   return (
-                    <tr key={spec.id} className="border-b last:border-0">
+                    <tr key={item.id} className="border-b last:border-0">
                       <td className="py-3 text-muted-foreground">{idx + 1}</td>
                       <td className="py-3">
-                        <div className="font-medium">{material?.material_item ?? spec.material_id}</div>
+                        <div className="font-medium">{material?.material_item ?? item.material_id}</div>
                         {material && (
                           <div className="text-xs text-muted-foreground font-mono">{material.material_code}</div>
                         )}
@@ -100,16 +89,16 @@ export default async function ProjectDetailPage({ params }: Props) {
                         )}
                       </td>
                       <td className="py-3">
-                        {vendor ? (
-                          <Link href={`/vendors/${vendor.id}`} className="hover:underline">
-                            {vendor.company_name}
+                        {distributor ? (
+                          <Link href={`/distributors/${distributor.id}`} className="hover:underline">
+                            {distributor.company_name}
                           </Link>
                         ) : (
                           <span className="text-muted-foreground">-</span>
                         )}
                       </td>
                       <td className="py-3 pl-6 text-muted-foreground text-xs max-w-xs">
-                        {spec.memo}
+                        {item.memo}
                       </td>
                       <td className="py-3">
                         {material && (

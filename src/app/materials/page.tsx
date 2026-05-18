@@ -1,13 +1,15 @@
-import { getMaterials, getData } from "@/lib/data";
+import { getMaterials, getMaterialCategories } from "@/lib/data";
 import { MaterialsFilter } from "@/components/materials/MaterialsFilter";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
 export const metadata = { title: "마감재 등록 | 마감재 DB" };
 
-export default function MaterialsPage() {
-  const materials = getMaterials();
-  const data = getData();
+export default async function MaterialsPage() {
+  const [materials, categories] = await Promise.all([
+    getMaterials(),
+    getMaterialCategories(),
+  ]);
 
   return (
     <div className="p-8">
@@ -24,7 +26,7 @@ export default function MaterialsPage() {
 
       <MaterialsFilter
         materials={materials}
-        categories={data.material_categories}
+        categories={categories}
       />
     </div>
   );

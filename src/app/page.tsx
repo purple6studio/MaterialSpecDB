@@ -1,13 +1,17 @@
-import { getData } from "@/lib/data";
+import { getMaterials, getDistributors, getProjects } from "@/lib/data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Layers, Building2, FolderOpen } from "lucide-react";
 import Link from "next/link";
 
-export default function HomePage() {
-  const data = getData();
-  const totalMaterials = data.materials.length;
-  const totalVendors = data.vendors.length;
-  const totalProjects = data.projects.length;
+export default async function HomePage() {
+  const [materials, distributors, projects] = await Promise.all([
+    getMaterials(),
+    getDistributors(),
+    getProjects(),
+  ]);
+  const totalMaterials = materials.length;
+  const totalDistributors = distributors.length;
+  const totalProjects = projects.length;
 
   return (
     <div className="p-8">
@@ -30,14 +34,14 @@ export default function HomePage() {
           </Card>
         </Link>
 
-        <Link href="/vendors">
+        <Link href="/distributors">
           <Card className="hover:shadow-md transition-shadow cursor-pointer">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">업체</CardTitle>
               <Building2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{totalVendors}</div>
+              <div className="text-3xl font-bold">{totalDistributors}</div>
               <p className="text-xs text-muted-foreground mt-1">등록된 업체 수</p>
             </CardContent>
           </Card>

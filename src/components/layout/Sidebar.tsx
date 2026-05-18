@@ -86,21 +86,21 @@ function CollapsibleMenu({
 export function Sidebar() {
   const pathname = usePathname();
   const [materialsOpenPref, setMaterialsOpenPref] = useState(false);
-  const [vendorsOpenPref, setVendorsOpenPref] = useState(false);
+  const [distributorsOpenPref, setDistributorsOpenPref] = useState(false);
 
   const onMaterialsPath = pathname.startsWith("/materials");
-  const onVendorsPath = pathname.startsWith("/vendors");
+  const onDistributorsPath = pathname.startsWith("/distributors");
   const materialsOpen = materialsOpenPref || onMaterialsPath;
-  const vendorsOpen = vendorsOpenPref || onVendorsPath;
+  const distributorsOpen = distributorsOpenPref || onDistributorsPath;
 
   const materialSubItems = [
     { label: "카테고리 관리", href: "/materials/categories", icon: Tag },
     { label: "마감재 등록", href: "/materials", icon: Package, exact: true },
   ];
 
-  const vendorSubItems = [
-    { label: "마감재 업체", href: "/vendors/material", icon: Truck },
-    { label: "기타 업체", href: "/vendors/other", icon: Wrench },
+  const distributorSubItems = [
+    { label: "마감재 업체", href: "/distributors/material", icon: Truck },
+    { label: "기타 업체", href: "/distributors/other", icon: Wrench },
   ];
 
   const bottomNavItems = [
@@ -123,10 +123,10 @@ export function Sidebar() {
         <CollapsibleMenu
           icon={Building2}
           label="업체 DB"
-          isActive={onVendorsPath}
-          isOpen={vendorsOpen}
-          onToggle={() => setVendorsOpenPref((v) => !v)}
-          subItems={vendorSubItems}
+          isActive={onDistributorsPath}
+          isOpen={distributorsOpen}
+          onToggle={() => setDistributorsOpenPref((v) => !v)}
+          subItems={distributorSubItems}
           pathname={pathname}
         />
         {bottomNavItems.map((item) => {
@@ -160,7 +160,7 @@ export function Sidebar() {
         </p>
         <div className="mt-1 flex items-center gap-1.5">
           <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400" />
-          <span className="text-[11px] text-muted-foreground">Supabase 연동 전</span>
+          <span className="text-[11px] text-muted-foreground">Supabase 연동 중</span>
         </div>
       </div>
     </aside>

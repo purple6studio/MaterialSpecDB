@@ -1,6 +1,11 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getMaterialById, getMaterialCategoryById, getVendorsForMaterial, getData } from "@/lib/data";
+import {
+  getMaterialById,
+  getMaterialCategoryById,
+  getDistributorsForMaterial,
+  getProjectSpecsWithProjectForMaterial,
+} from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { MaterialDetailTabs } from "@/components/materials/MaterialDetailTabs";
@@ -11,17 +16,18 @@ interface Props {
 
 export default async function MaterialDetailPage({ params }: Props) {
   const { id } = await params;
-  const material = getMaterialById(id);
+  const [material, distributors, specRows] = await Promise.all([
+    getMaterialById(id),
+    getDistributorsForMaterial(id),
+    getProjectSpecsWithProjectForMaterial(id),
+  ]);
   if (!material) notFound();
 
-  const category = getMaterialCategoryById(material.category_id);
-  const vendors = getVendorsForMaterial(id);
-  const data = getData();
+  const category = (await getMaterialCategoryById(material.category_id)) ?? undefined;
 
-  const relatedProjects = data.project_specs
-    .filter((s) => s.material_id === id)
-    .map((spec) => ({ spec, project: data.projects.find((p) => p.id === spec.project_id) }))
-    .filter((r): r is { spec: typeof r.spec; project: NonNullable<typeof r.project> } => r.project !== undefined);
+  const relatedProjects = specRows
+    .filter((r) => r.project !== null)
+    .map((r) => ({ spec: r, project: r.project! }));
 
   return (
     <div className="p-8 max-w-3xl">
@@ -55,7 +61,7 @@ export default async function MaterialDetailPage({ params }: Props) {
       <MaterialDetailTabs
         material={material}
         category={category}
-        vendors={vendors}
+        distributors={distributors}
         relatedProjects={relatedProjects}
       />
     </div>

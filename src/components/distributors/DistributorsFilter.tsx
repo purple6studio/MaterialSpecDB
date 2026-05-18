@@ -13,19 +13,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Vendor } from "@/types";
+import type { Distributor } from "@/types";
 
 interface Props {
-  vendors: Vendor[];
+  distributors: Distributor[];
   specialties: string[];
 }
 
-export function VendorsFilter({ vendors, specialties }: Props) {
+export function DistributorsFilter({ distributors, specialties }: Props) {
   const [search, setSearch] = useState("");
   const [specialty, setSpecialty] = useState("all");
 
   const filtered = useMemo(() => {
-    return vendors.filter((v) => {
+    return distributors.filter((v) => {
       const q = search.toLowerCase();
       const matchSearch =
         !q ||
@@ -39,7 +39,7 @@ export function VendorsFilter({ vendors, specialties }: Props) {
       const matchSpec = specialty === "all" || v.specialty === specialty;
       return matchSearch && matchSpec;
     });
-  }, [vendors, search, specialty]);
+  }, [distributors, search, specialty]);
 
   return (
     <>
@@ -85,7 +85,7 @@ export function VendorsFilter({ vendors, specialties }: Props) {
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <Link
-                    href={`/vendors/${v.id}`}
+                    href={`/distributors/${v.id}`}
                     className="font-semibold hover:underline"
                   >
                     {v.company_name}
@@ -123,7 +123,7 @@ export function VendorsFilter({ vendors, specialties }: Props) {
                   )}
                 </div>
                 <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" asChild>
-                  <Link href={`/vendors/${v.id}`}>
+                  <Link href={`/distributors/${v.id}`}>
                     상세보기 <ExternalLink className="h-3 w-3" />
                   </Link>
                 </Button>
