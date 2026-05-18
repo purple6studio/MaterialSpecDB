@@ -42,14 +42,33 @@ export async function createDistributor(
   prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
+  const id = (formData.get("id") as string) || crypto.randomUUID();
   const { error } = await supabase.from("distributors").insert({
-    id: (formData.get("id") as string) || crypto.randomUUID(),
+    id,
     distributor_type: formData.get("distributor_type") as string,
     company_name: formData.get("company_name") as string,
     address: (formData.get("address") as string) || null,
     note: (formData.get("note") as string) || null,
   });
   if (error) return { success: false, error: error.message };
+
+  const contactsJson = formData.get("contacts") as string;
+  if (contactsJson) {
+    const contacts = JSON.parse(contactsJson) as { name: string; role: string; phone: string; email: string }[];
+    const rows = contacts.filter((c) => c.name.trim()).map((c) => ({
+      id: crypto.randomUUID(),
+      distributor_id: id,
+      name: c.name.trim(),
+      role: c.role.trim() || null,
+      phone: c.phone.trim() || null,
+      email: c.email.trim() || null,
+    }));
+    if (rows.length > 0) {
+      const { error: cErr } = await supabase.from("distributor_contacts").insert(rows);
+      if (cErr) return { success: false, error: cErr.message };
+    }
+  }
+
   revalidatePath("/distributors");
   revalidatePath("/distributors/material");
   revalidatePath("/distributors/other");

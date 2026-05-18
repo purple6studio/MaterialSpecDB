@@ -18,8 +18,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
-import type { Distributor, DistributorType } from "@/types";
+import { Plus, Trash2 } from "lucide-react";
+import type { Distributor, DistributorContact, DistributorType } from "@/types";
+
+interface ContactRow {
+  name: string;
+  role: string;
+  phone: string;
+  email: string;
+}
 
 interface Props {
   onSuccess?: (distributor: Distributor) => void;
@@ -29,26 +36,56 @@ interface Props {
 export function AddDistributorModal({ onSuccess, defaultType }: Props) {
   const [open, setOpen] = useState(false);
   const [distributorType, setDistributorType] = useState<string>(defaultType ?? "");
+  const [contacts, setContacts] = useState<ContactRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  function addContact() {
+    setContacts((prev) => [...prev, { name: "", role: "", phone: "", email: "" }]);
+  }
+
+  function removeContact(idx: number) {
+    setContacts((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  function updateContact(idx: number, field: keyof ContactRow, value: string) {
+    setContacts((prev) => prev.map((c, i) => (i === idx ? { ...c, [field]: value } : c)));
+  }
+
+  function resetForm() {
+    setDistributorType(defaultType ?? "");
+    setContacts([]);
+    setError(null);
+  }
 
   function handleSubmit(formData: FormData) {
     setError(null);
     const id = crypto.randomUUID();
     formData.set("id", id);
+    formData.set("contacts", JSON.stringify(contacts));
     startTransition(async () => {
       const result = await createDistributor(null, formData);
       if (result?.success) {
+        const builtContacts: DistributorContact[] = contacts
+          .filter((c) => c.name.trim())
+          .map((c) => ({
+            id: crypto.randomUUID(),
+            distributor_id: id,
+            name: c.name,
+            role: c.role,
+            phone: c.phone,
+            email: c.email,
+          }));
         onSuccess?.({
           id,
           distributor_type: (formData.get("distributor_type") as DistributorType) || "material",
           company_name: (formData.get("company_name") as string) || "",
           address: (formData.get("address") as string) || "",
           note: (formData.get("note") as string) || "",
-          contacts: [],
+          contacts: builtContacts,
         });
         setOpen(false);
-        setDistributorType("");
+        resetForm();
       } else {
         setError(result?.error ?? "오류가 발생했습니다.");
       }
@@ -56,14 +93,14 @@ export function AddDistributorModal({ onSuccess, defaultType }: Props) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(next) => { setOpen(next); if (!next) resetForm(); }}>
       <DialogTrigger asChild>
         <Button className="gap-2">
           <Plus className="h-4 w-4" />
           업체 등록
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>업체 등록</DialogTitle>
         </DialogHeader>
@@ -105,12 +142,69 @@ export function AddDistributorModal({ onSuccess, defaultType }: Props) {
             />
           </div>
 
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
+          {/* 담당자 */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">담당자</label>
+              <Button type="button" variant="outline" size="sm" className="h-7 gap-1 text-xs" onClick={addContact}>
+                <Plus className="h-3 w-3" />
+                담당자 추가
+              </Button>
+            </div>
+
+            {contacts.length > 0 && (
+              <div className="space-y-3 rounded-lg border p-3">
+                {contacts.map((c, idx) => (
+                  <div key={idx} className="space-y-2">
+                    {idx > 0 && <div className="border-t pt-3" />}
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground">담당자 {idx + 1}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                        onClick={() => removeContact(idx)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        placeholder="이름 *"
+                        value={c.name}
+                        onChange={(e) => updateContact(idx, "name", e.target.value)}
+                        className="h-8 text-sm"
+                      />
+                      <Input
+                        placeholder="역할 (예: 영업담당)"
+                        value={c.role}
+                        onChange={(e) => updateContact(idx, "role", e.target.value)}
+                        className="h-8 text-sm"
+                      />
+                      <Input
+                        placeholder="전화"
+                        value={c.phone}
+                        onChange={(e) => updateContact(idx, "phone", e.target.value)}
+                        className="h-8 text-sm"
+                      />
+                      <Input
+                        placeholder="이메일"
+                        value={c.email}
+                        onChange={(e) => updateContact(idx, "email", e.target.value)}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {error && <p className="text-sm text-destructive">{error}</p>}
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => { setOpen(false); resetForm(); }}>
               취소
             </Button>
             <Button type="submit" disabled={pending || (!defaultType && !distributorType)}>
