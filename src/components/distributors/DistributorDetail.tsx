@@ -236,7 +236,7 @@ export function DistributorDetail({
             <thead>
               <tr className="border-b bg-muted/30">
                 <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">이름</th>
-                <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">역할</th>
+                <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">직함</th>
                 <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">전화</th>
                 <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">이메일</th>
                 <th className="px-3 py-2 w-20 text-right text-xs font-medium text-muted-foreground">수정/삭제</th>

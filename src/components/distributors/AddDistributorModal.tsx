@@ -175,28 +175,37 @@ export function AddDistributorModal({ onSuccess, defaultType, lockType, distribu
                       </Button>
                     </div>
                     <div className="space-y-2">
-                      <Input
-                        placeholder="이름 *"
-                        value={c.name}
-                        onChange={(e) => updateContact(idx, "name", e.target.value)}
-                        className="h-8 text-sm"
-                      />
-                      <Input
-                        placeholder="역할 (예: 영업담당)"
-                        value={c.role}
-                        onChange={(e) => updateContact(idx, "role", e.target.value)}
-                        className="h-8 text-sm"
-                      />
-                      <PhoneInput
-                        value={c.phone}
-                        onChange={(v) => updateContact(idx, "phone", v)}
-                      />
-                      <Input
-                        placeholder="이메일"
-                        value={c.email}
-                        onChange={(e) => updateContact(idx, "email", e.target.value)}
-                        className="h-8 text-sm"
-                      />
+                      <div className="flex items-center gap-3">
+                        <span className="w-16 shrink-0 text-sm text-muted-foreground">이름 *</span>
+                        <Input
+                          value={c.name}
+                          onChange={(e) => updateContact(idx, "name", e.target.value)}
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="w-16 shrink-0 text-sm text-muted-foreground">직함</span>
+                        <Input
+                          value={c.role}
+                          onChange={(e) => updateContact(idx, "role", e.target.value)}
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="w-16 shrink-0 text-sm text-muted-foreground">전화번호</span>
+                        <PhoneInput
+                          value={c.phone}
+                          onChange={(v) => updateContact(idx, "phone", v)}
+                        />
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="w-16 shrink-0 text-sm text-muted-foreground">이메일</span>
+                        <Input
+                          value={c.email}
+                          onChange={(e) => updateContact(idx, "email", e.target.value)}
+                          className="h-8 text-sm"
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}
