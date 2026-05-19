@@ -60,4 +60,12 @@ export interface ProjectSpec {
   material_id: string;
   distributor_id: string;
   memo: string;
+  code_suffix: string;
+  contact_id: string | null;
+  quantity: string;
+  area: string;
+  location: string;
+  description: string;
+  price: string;
+  delivery: string;
 }

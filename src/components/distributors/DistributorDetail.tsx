@@ -10,6 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Command, CommandInput, CommandList, CommandEmpty,
@@ -265,7 +266,7 @@ export function DistributorDetail({
                     </td>
                     <td className="px-3 py-2">
                       {isEditing
-                        ? <Input value={editForm.phone} onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))} className="h-7 text-xs" />
+                        ? <PhoneInput value={editForm.phone} onChange={(v) => setEditForm((f) => ({ ...f, phone: v }))} compact />
                         : c.phone
                           ? <span className="flex items-center gap-1 text-muted-foreground text-xs"><Phone className="h-3 w-3" />{c.phone}</span>
                           : <span className="text-muted-foreground">-</span>}
@@ -313,7 +314,7 @@ export function DistributorDetail({
                     <Input value={newContact.role} onChange={(e) => setNewContact((f) => ({ ...f, role: e.target.value }))} placeholder="역할" className="h-7 text-xs" />
                   </td>
                   <td className="px-3 py-2">
-                    <Input value={newContact.phone} onChange={(e) => setNewContact((f) => ({ ...f, phone: e.target.value }))} placeholder="전화" className="h-7 text-xs" />
+                    <PhoneInput value={newContact.phone} onChange={(v) => setNewContact((f) => ({ ...f, phone: v }))} compact />
                   </td>
                   <td className="px-3 py-2">
                     <Input value={newContact.email} onChange={(e) => setNewContact((f) => ({ ...f, email: e.target.value }))} placeholder="이메일" className="h-7 text-xs" />

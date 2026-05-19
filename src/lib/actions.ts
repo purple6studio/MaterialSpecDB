@@ -212,14 +212,33 @@ export async function removeMaterialFromDistributor(
 
 export async function addProjectSpec(
   projectId: string,
-  data: { material_id: string; distributor_id: string; memo: string }
+  data: {
+    material_id: string;
+    distributor_id: string;
+    code_suffix?: string;
+    contact_id?: string | null;
+    quantity?: string;
+    area?: string;
+    location?: string;
+    description?: string;
+    price?: string;
+    delivery?: string;
+  }
 ): Promise<ActionState> {
   const { error } = await supabase.from("project_specs").insert({
     id: crypto.randomUUID(),
     project_id: projectId,
     material_id: data.material_id,
     distributor_id: data.distributor_id,
-    memo: data.memo || "",
+    memo: "",
+    code_suffix: data.code_suffix ?? "",
+    contact_id: data.contact_id ?? null,
+    quantity: data.quantity ?? "",
+    area: data.area ?? "",
+    location: data.location ?? "",
+    description: data.description ?? "",
+    price: data.price ?? "",
+    delivery: data.delivery ?? "",
   });
   if (error) return { success: false, error: error.message };
   revalidatePath(`/projects/${projectId}`);

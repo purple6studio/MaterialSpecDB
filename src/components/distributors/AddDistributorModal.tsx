@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
+import { PhoneInput } from "@/components/ui/phone-input";
 import type { Distributor, DistributorContact, DistributorTypeRecord } from "@/types";
 
 interface ContactRow {
@@ -186,11 +187,9 @@ export function AddDistributorModal({ onSuccess, defaultType, lockType, distribu
                         onChange={(e) => updateContact(idx, "role", e.target.value)}
                         className="h-8 text-sm"
                       />
-                      <Input
-                        placeholder="전화"
+                      <PhoneInput
                         value={c.phone}
-                        onChange={(e) => updateContact(idx, "phone", e.target.value)}
-                        className="h-8 text-sm"
+                        onChange={(v) => updateContact(idx, "phone", v)}
                       />
                       <Input
                         placeholder="이메일"

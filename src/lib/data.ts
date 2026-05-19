@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import type { Material, MaterialCategory, Distributor, DistributorTypeRecord, Project, ProjectSpec, MaterialDistributorLink } from "@/types";
+import type { Material, MaterialCategory, Distributor, DistributorContact, DistributorTypeRecord, Project, ProjectSpec, MaterialDistributorLink } from "@/types";
 
 export async function getMaterials(): Promise<Material[]> {
   const { data, error } = await supabase.from("materials").select("*").order("material_item");
@@ -105,21 +105,21 @@ export async function getAllProjectSpecs(): Promise<ProjectSpec[]> {
   return data;
 }
 
-// 프로젝트 상세 페이지: specs + 중첩된 material(category 포함) + distributor를 한 번에 조회
+// 프로젝트 상세 페이지: specs + 중첩된 material(category 포함) + distributor(contacts 포함)를 한 번에 조회
 export async function getProjectSpecsWithDetails(projectId: string) {
   const { data, error } = await supabase
     .from("project_specs")
     .select(`
       *,
       material:materials(*, category:material_categories(*)),
-      distributor:distributors(id, company_name)
+      distributor:distributors(id, company_name, contacts:distributor_contacts(*))
     `)
     .eq("project_id", projectId);
   if (error) throw error;
   return data as Array<
     ProjectSpec & {
       material: (Material & { category: MaterialCategory | null }) | null;
-      distributor: Pick<Distributor, "id" | "company_name"> | null;
+      distributor: (Pick<Distributor, "id" | "company_name"> & { contacts: DistributorContact[] }) | null;
     }
   >;
 }

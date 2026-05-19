@@ -4,6 +4,7 @@ import {
   getProjectById,
   getProjectSpecsWithDetails,
   getMaterials,
+  getMaterialCategories,
   getDistributors,
   getMaterialDistributorLinks,
 } from "@/lib/data";
@@ -19,10 +20,11 @@ interface Props {
 
 export default async function ProjectDetailPage({ params }: Props) {
   const { id } = await params;
-  const [project, specItems, materials, distributors, links] = await Promise.all([
+  const [project, specItems, materials, categories, distributors, links] = await Promise.all([
     getProjectById(id),
     getProjectSpecsWithDetails(id),
     getMaterials(),
+    getMaterialCategories(),
     getDistributors(),
     getMaterialDistributorLinks(),
   ]);
@@ -68,6 +70,7 @@ export default async function ProjectDetailPage({ params }: Props) {
             projectId={id}
             isDraft={isDraft}
             materials={materials}
+            categories={categories}
             distributors={distributors}
             links={links}
           />
