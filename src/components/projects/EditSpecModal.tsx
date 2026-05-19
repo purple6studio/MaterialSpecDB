@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Check, ChevronsUpDown, Plus } from "lucide-react";
+import { Check, ChevronsUpDown } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,16 +27,31 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { addProjectSpec } from "@/lib/actions";
-import type { Material, MaterialCategory, Distributor, MaterialDistributorLink } from "@/types";
+import { updateProjectSpec } from "@/lib/actions";
+import type {
+  ProjectSpec,
+  Material,
+  MaterialCategory,
+  DistributorContact,
+  Distributor,
+  MaterialDistributorLink,
+} from "@/types";
+
+type SpecItem = ProjectSpec & {
+  material: (Material & { category: MaterialCategory | null }) | null;
+  distributor: (Pick<Distributor, "id" | "company_name"> & { contacts: DistributorContact[] }) | null;
+};
 
 interface Props {
+  spec: SpecItem;
   projectId: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   materials: Material[];
   categories: MaterialCategory[];
   distributors: Distributor[];
   links: MaterialDistributorLink[];
-  onAdded: () => void;
+  onSaved: () => void;
 }
 
 function InfoRow({ label, value }: { label: string; value?: string | null }) {
@@ -53,12 +67,10 @@ function Field({
   label,
   value,
   onChange,
-  placeholder,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
-  placeholder?: string;
 }) {
   return (
     <div className="space-y-1">
@@ -66,33 +78,35 @@ function Field({
       <Input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder ?? label}
+        placeholder={label}
         className="h-8 text-sm"
       />
     </div>
   );
 }
 
-export function AddSpecModal({
+export function EditSpecModal({
+  spec,
   projectId,
+  open,
+  onOpenChange,
   materials,
   categories,
   distributors,
   links,
-  onAdded,
+  onSaved,
 }: Props) {
-  const [open, setOpen] = useState(false);
   const [comboOpen, setComboOpen] = useState(false);
-  const [materialId, setMaterialId] = useState<string | null>(null);
-  const [distributorId, setDistributorId] = useState<string | null>(null);
-  const [contactId, setContactId] = useState<string | null>(null);
-  const [codeSuffix, setCodeSuffix] = useState("");
-  const [quantity, setQuantity] = useState("");
-  const [area, setArea] = useState("");
-  const [location, setLocation] = useState("");
-  const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
-  const [delivery, setDelivery] = useState("");
+  const [materialId, setMaterialId] = useState(spec.material_id);
+  const [distributorId, setDistributorId] = useState(spec.distributor_id);
+  const [contactId, setContactId] = useState<string | null>(spec.contact_id);
+  const [codeSuffix, setCodeSuffix] = useState(spec.code_suffix ?? "");
+  const [quantity, setQuantity] = useState(spec.quantity ?? "");
+  const [area, setArea] = useState(spec.area ?? "");
+  const [location, setLocation] = useState(spec.location ?? "");
+  const [description, setDescription] = useState(spec.description ?? "");
+  const [price, setPrice] = useState(spec.price ?? "");
+  const [delivery, setDelivery] = useState(spec.delivery ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -109,7 +123,7 @@ export function AddSpecModal({
 
   function handleMaterialSelect(id: string) {
     setMaterialId(id);
-    setDistributorId(null);
+    setDistributorId("");
     setContactId(null);
     setComboOpen(false);
   }
@@ -119,12 +133,12 @@ export function AddSpecModal({
     setContactId(null);
   }
 
-  function handleSubmit() {
+  function handleSave() {
     if (!materialId) { setError("자재를 선택해주세요."); return; }
     if (!distributorId) { setError("업체를 선택해주세요."); return; }
     setError(null);
     startTransition(async () => {
-      const result = await addProjectSpec(projectId, {
+      const result = await updateProjectSpec(spec.id, projectId, {
         material_id: materialId,
         distributor_id: distributorId,
         code_suffix: codeSuffix,
@@ -137,45 +151,19 @@ export function AddSpecModal({
         delivery,
       });
       if (result?.success) {
-        resetForm();
-        setOpen(false);
-        onAdded();
+        onOpenChange(false);
+        onSaved();
       } else {
         setError(result?.error ?? "오류가 발생했습니다.");
       }
     });
   }
 
-  function resetForm() {
-    setMaterialId(null);
-    setDistributorId(null);
-    setContactId(null);
-    setCodeSuffix("");
-    setQuantity("");
-    setArea("");
-    setLocation("");
-    setDescription("");
-    setPrice("");
-    setDelivery("");
-    setError(null);
-  }
-
-  function handleOpenChange(val: boolean) {
-    setOpen(val);
-    if (!val) resetForm();
-  }
-
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button size="sm" className="gap-2">
-          <Plus className="h-4 w-4" />
-          마감재 추가
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[88vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>스펙 추가 입력</DialogTitle>
+          <DialogTitle>추가 정보 입력</DialogTitle>
         </DialogHeader>
         <div className="space-y-5 px-6 pb-6">
 
@@ -206,7 +194,12 @@ export function AddSpecModal({
                           value={`${m.material_item} ${m.material_finish ?? ""} ${m.material_size ?? ""}`}
                           onSelect={() => handleMaterialSelect(m.id)}
                         >
-                          <Check className={cn("mr-2 h-4 w-4 shrink-0", materialId === m.id ? "opacity-100" : "opacity-0")} />
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4 shrink-0",
+                              materialId === m.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
                           <div>
                             <div className="font-medium">{m.material_item}</div>
                             <div className="text-xs text-muted-foreground">
@@ -253,9 +246,9 @@ export function AddSpecModal({
             {!materialId ? (
               <p className="text-sm text-muted-foreground py-1">자재를 먼저 선택해주세요.</p>
             ) : linkedDistributors.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-1">연결된 업체가 없습니다. 마감재 DB에서 업체를 연결해주세요.</p>
+              <p className="text-sm text-muted-foreground py-1">연결된 업체가 없습니다.</p>
             ) : (
-              <Select value={distributorId ?? ""} onValueChange={handleDistributorChange}>
+              <Select value={distributorId} onValueChange={handleDistributorChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="업체를 선택하세요" />
                 </SelectTrigger>
@@ -303,15 +296,15 @@ export function AddSpecModal({
           {error && <p className="text-sm text-destructive">{error}</p>}
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               취소
             </Button>
             <Button
               type="button"
-              onClick={handleSubmit}
+              onClick={handleSave}
               disabled={pending || !materialId || !distributorId}
             >
-              {pending ? "추가 중..." : "추가"}
+              {pending ? "저장 중..." : "저장"}
             </Button>
           </div>
         </div>

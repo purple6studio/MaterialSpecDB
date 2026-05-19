@@ -245,6 +245,42 @@ export async function addProjectSpec(
   return { success: true };
 }
 
+export async function updateProjectSpec(
+  specId: string,
+  projectId: string,
+  data: {
+    material_id: string;
+    distributor_id: string;
+    code_suffix?: string;
+    contact_id?: string | null;
+    quantity?: string;
+    area?: string;
+    location?: string;
+    description?: string;
+    price?: string;
+    delivery?: string;
+  }
+): Promise<ActionState> {
+  const { error } = await supabase
+    .from("project_specs")
+    .update({
+      material_id: data.material_id,
+      distributor_id: data.distributor_id,
+      code_suffix: data.code_suffix ?? "",
+      contact_id: data.contact_id ?? null,
+      quantity: data.quantity ?? "",
+      area: data.area ?? "",
+      location: data.location ?? "",
+      description: data.description ?? "",
+      price: data.price ?? "",
+      delivery: data.delivery ?? "",
+    })
+    .eq("id", specId);
+  if (error) return { success: false, error: error.message };
+  revalidatePath(`/projects/${projectId}`);
+  return { success: true };
+}
+
 export async function deleteProjectSpec(specId: string, projectId: string): Promise<ActionState> {
   const { error } = await supabase.from("project_specs").delete().eq("id", specId);
   if (error) return { success: false, error: error.message };

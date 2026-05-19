@@ -2,11 +2,11 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Trash2, ExternalLink } from "lucide-react";
+import { Trash2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { deleteProjectSpec } from "@/lib/actions";
 import { AddSpecModal } from "./AddSpecModal";
+import { EditSpecModal } from "./EditSpecModal";
 import type {
   ProjectSpec,
   Material,
@@ -43,6 +43,7 @@ export function SpecbookTable({
   const router = useRouter();
   const [deletedIds, setDeletedIds] = useState(new Set<string>());
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingSpec, setEditingSpec] = useState<SpecItem | null>(null);
   const [, startTransition] = useTransition();
 
   const items = specItems.filter((item) => !deletedIds.has(item.id));
@@ -78,18 +79,17 @@ export function SpecbookTable({
         </p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm border-collapse">
             <thead>
-              <tr className="border-b">
-                <th className="text-left font-medium text-muted-foreground pb-3 pr-4 w-8">#</th>
-                <th className="text-left font-medium text-muted-foreground pb-3 pr-4">MATERIAL</th>
-                <th className="text-left font-medium text-muted-foreground pb-3 pr-4">CODE</th>
-                <th className="text-left font-medium text-muted-foreground pb-3 pr-4">ITEM</th>
-                <th className="text-left font-medium text-muted-foreground pb-3 pr-4">DISTRIBUTOR</th>
-                <th className="text-left font-medium text-muted-foreground pb-3 pr-4">CONTACT NO.</th>
-                <th className="text-left font-medium text-muted-foreground pb-3 pr-4">LOCATION</th>
-                <th className="pb-3 w-8" />
-                {isDraft && <th className="pb-3 w-8" />}
+              <tr>
+                <th className="text-center font-bold text-foreground py-3 px-3 whitespace-nowrap bg-primary/10 border border-border">MATERIAL</th>
+                <th className="text-center font-bold text-foreground py-3 px-3 whitespace-nowrap bg-primary/10 border border-border">CODE</th>
+                <th className="text-center font-bold text-foreground py-3 px-3 whitespace-nowrap bg-primary/10 border border-border">ITEM</th>
+                <th className="text-center font-bold text-foreground py-3 px-3 whitespace-nowrap bg-primary/10 border border-border">DISTRIBUTOR</th>
+                <th className="text-center font-bold text-foreground py-3 px-3 whitespace-nowrap bg-primary/10 border border-border">CONTACT NO.</th>
+                <th className="text-center font-bold text-foreground py-3 px-3 whitespace-nowrap bg-primary/10 border border-border">LOCATION</th>
+                <th className="text-center font-bold text-foreground py-3 px-3 whitespace-nowrap bg-muted border border-border">추가 정보 입력</th>
+                {isDraft && <th className="text-center font-bold text-foreground py-3 px-3 whitespace-nowrap bg-muted border border-border">삭제</th>}
               </tr>
             </thead>
             <tbody>
@@ -104,27 +104,24 @@ export function SpecbookTable({
                   : item.code_suffix || "-";
 
                 return (
-                  <tr key={item.id} className="border-b last:border-0 group">
-                    <td className="py-3 pr-4 text-muted-foreground text-xs">{idx + 1}</td>
-                    <td className="py-3 pr-4">
+                  <tr key={item.id} className="group">
+                    <td className="py-3 px-3 text-center align-middle whitespace-nowrap border border-border">
                       <span className="text-xs font-medium">{category?.category_eng ?? "-"}</span>
                     </td>
-                    <td className="py-3 pr-4">
+                    <td className="py-3 px-3 text-center align-middle whitespace-nowrap border border-border">
                       <span className="text-xs font-mono">{code}</span>
                     </td>
-                    <td className="py-3 pr-4">
+                    <td className="py-3 px-3 text-center align-middle whitespace-nowrap border border-border">
                       <span className="text-xs">{material?.material_item ?? "-"}</span>
                     </td>
-                    <td className="py-3 pr-4">
+                    <td className="py-3 px-3 text-center align-middle whitespace-nowrap border border-border">
                       {distributor ? (
-                        <Link href={`/distributors/${distributor.id}`} className="text-xs hover:underline">
-                          {distributor.company_name}
-                        </Link>
+                        <span className="text-xs">{distributor.company_name}</span>
                       ) : (
                         <span className="text-xs text-muted-foreground">-</span>
                       )}
                     </td>
-                    <td className="py-3 pr-4">
+                    <td className="py-3 px-3 text-center align-middle whitespace-nowrap border border-border">
                       {contact ? (
                         <div>
                           <div className="text-xs font-medium">{contact.name}</div>
@@ -134,24 +131,25 @@ export function SpecbookTable({
                         <span className="text-xs text-muted-foreground">-</span>
                       )}
                     </td>
-                    <td className="py-3 pr-4">
+                    <td className="py-3 px-3 text-center align-middle whitespace-nowrap border border-border">
                       <span className="text-xs text-muted-foreground">{item.location || "-"}</span>
                     </td>
-                    <td className="py-3">
-                      {material && (
-                        <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
-                          <Link href={`/materials/${material.id}`}>
-                            <ExternalLink className="h-3.5 w-3.5" />
-                          </Link>
-                        </Button>
-                      )}
+                    <td className="py-3 px-3 text-center align-middle bg-muted border border-border">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => setEditingSpec(item)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
                     </td>
                     {isDraft && (
-                      <td className="py-3">
+                      <td className="py-3 px-3 text-center align-middle bg-muted border border-border">
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
                           onClick={() => handleDelete(item.id)}
                           disabled={deletingId === item.id}
                         >
@@ -165,6 +163,20 @@ export function SpecbookTable({
             </tbody>
           </table>
         </div>
+      )}
+
+      {editingSpec && (
+        <EditSpecModal
+          spec={editingSpec}
+          projectId={projectId}
+          open={!!editingSpec}
+          onOpenChange={(open) => { if (!open) setEditingSpec(null); }}
+          materials={materials}
+          categories={categories}
+          distributors={distributors}
+          links={links}
+          onSaved={() => router.refresh()}
+        />
       )}
     </div>
   );
