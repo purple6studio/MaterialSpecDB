@@ -87,11 +87,7 @@ export function DistributorDetail({
   const [editForm, setEditForm] = useState({ name: "", role: "", phone: "", email: "" });
   const [addingContact, setAddingContact] = useState(false);
   const [newContact, setNewContact] = useState({ name: "", role: "", phone: "", email: "" });
-
-  function closeAddingContact() {
-    setAddingContact(false);
-    setNewContact({ name: "", role: "", phone: "", email: "" });
-  }
+  const [pendingContactIds, setPendingContactIds] = useState<Set<string>>(new Set());
 
   // ── 마감재 ───────────────────────────────────────────
   const [materials, setMaterials] = useState<Material[]>(initialMaterials);
@@ -112,6 +108,12 @@ export function DistributorDetail({
   }
 
   function handleSaveContact(id: string) {
+    if (pendingContactIds.has(id)) {
+      // 미저장 담당자 → 로컬 상태만 업데이트
+      setContacts((prev) => prev.map((c) => c.id === id ? { ...c, ...editForm } : c));
+      setEditingContactId(null);
+      return;
+    }
     startTransition(async () => {
       const result = await updateDistributorContact(id, editForm);
       if (result?.success) {
@@ -122,22 +124,65 @@ export function DistributorDetail({
   }
 
   function handleDeleteContact(id: string) {
+    if (pendingContactIds.has(id)) {
+      // 미저장 담당자 → 로컬에서만 제거
+      setContacts((prev) => prev.filter((c) => c.id !== id));
+      setPendingContactIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
+      return;
+    }
     startTransition(async () => {
       const result = await deleteDistributorContact(id);
       if (result?.success) setContacts((prev) => prev.filter((c) => c.id !== id));
     });
   }
 
-  function handleAddContact() {
+  // ✓ 클릭 → 로컬 임시저장만 (DB 저장 안 함)
+  function handleAddLocalContact() {
     if (!newContact.name.trim()) return;
     const id = crypto.randomUUID();
+    setContacts((prev) => [...prev, { id, distributor_id: distributor.id, ...newContact }]);
+    setPendingContactIds((prev) => new Set([...prev, id]));
+    setNewContact({ name: "", role: "", phone: "", email: "" });
+  }
+
+  // X 클릭 → 현재 입력 행만 초기화 (기존 임시저장 유지)
+  function cancelAddRow() {
+    setAddingContact(false);
+    setNewContact({ name: "", role: "", phone: "", email: "" });
+  }
+
+  // 완료 클릭 → 현재 입력 행 임시저장 후 전체 DB 저장
+  function handleCompleteContacts() {
+    let finalIds = pendingContactIds;
+    let finalContacts = contacts;
+
+    if (newContact.name.trim()) {
+      const id = crypto.randomUUID();
+      const c: DistributorContact = { id, distributor_id: distributor.id, ...newContact };
+      finalContacts = [...contacts, c];
+      finalIds = new Set([...pendingContactIds, id]);
+      setContacts(finalContacts);
+    }
+
+    setAddingContact(false);
+    setNewContact({ name: "", role: "", phone: "", email: "" });
+
+    if (finalIds.size === 0) return;
+
     startTransition(async () => {
-      const result = await createDistributorContact(distributor.id, id, newContact);
-      if (result?.success) {
-        setContacts((prev) => [...prev, { id, distributor_id: distributor.id, ...newContact }]);
-        setNewContact({ name: "", role: "", phone: "", email: "" });
-        setAddingContact(false);
-      }
+      await Promise.all(
+        finalContacts
+          .filter((c) => finalIds.has(c.id))
+          .map((c) =>
+            createDistributorContact(distributor.id, c.id, {
+              name: c.name,
+              role: c.role,
+              phone: c.phone,
+              email: c.email,
+            })
+          )
+      );
+      setPendingContactIds(new Set());
     });
   }
 
@@ -326,7 +371,7 @@ export function DistributorDetail({
                 <Plus className="h-3 w-3" /> 담당자 추가
               </Button>
             ) : (
-              <Button variant="default" size="sm" className="h-7 text-xs" onClick={closeAddingContact}>
+              <Button variant="default" size="sm" className="h-7 text-xs" onClick={handleCompleteContacts}>
                 완료
               </Button>
             )}
@@ -353,8 +398,9 @@ export function DistributorDetail({
               )}
               {contacts.map((c) => {
                 const isEditing = editingContactId === c.id;
+                const isPending = pendingContactIds.has(c.id);
                 return (
-                  <tr key={c.id} className={`border-b last:border-0 transition-colors ${isEditing ? "bg-muted/20" : "hover:bg-muted/20"}`}>
+                  <tr key={c.id} className={`border-b last:border-0 transition-colors ${isEditing ? "bg-muted/20" : isPending ? "bg-primary/5" : "hover:bg-muted/20"}`}>
                     <td className="px-3 py-2">
                       {isEditing
                         ? <Input value={editForm.name} onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))} className="h-7 text-xs" />
@@ -422,10 +468,10 @@ export function DistributorDetail({
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex items-center justify-end gap-1">
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:text-primary" onClick={handleAddContact}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:text-primary" onClick={handleAddLocalContact}>
                         <Check className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={closeAddingContact}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={cancelAddRow}>
                         <X className="h-3.5 w-3.5" />
                       </Button>
                     </div>

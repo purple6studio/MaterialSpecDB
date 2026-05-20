@@ -78,9 +78,14 @@ CREATE POLICY "anon insert" ON project_specs           FOR INSERT WITH CHECK (tr
 
 -- ── UPDATE ──────────────────────────────────────────────
 
-CREATE POLICY "anon update" ON distributor_types      FOR UPDATE USING (true) WITH CHECK (true);
-CREATE POLICY "anon update" ON material_categories    FOR UPDATE USING (true) WITH CHECK (true);
-CREATE POLICY "anon update" ON distributor_contacts   FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "anon update" ON distributor_types          FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "anon update" ON material_categories        FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "anon update" ON materials                  FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "anon update" ON distributors               FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "anon update" ON distributor_contacts       FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "anon update" ON projects                   FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "anon update" ON project_specs              FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "anon update" ON material_distributor_links FOR UPDATE USING (true) WITH CHECK (true);
 
 -- ── DELETE ──────────────────────────────────────────────
 
