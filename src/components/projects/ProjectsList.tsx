@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2, Search } from "lucide-react";
+import { Trash2, Search, Pencil } from "lucide-react";
 import { deleteProject } from "@/lib/actions";
 import type { Project } from "@/types";
 
@@ -123,7 +123,7 @@ export function ProjectsList({ projects: initialProjects }: Props) {
                 클라이언트 <SortIcon active={sortKey === "project_client"} dir={sortDir} />
               </button>
             </th>
-            <th className="px-4 py-3 w-24 text-center text-xs font-medium text-muted-foreground">상세보기</th>
+            <th className="px-4 py-3 w-24 text-center text-xs font-medium text-muted-foreground">수정</th>
             <th className="px-4 py-3 w-12 text-center text-xs font-medium text-muted-foreground">삭제</th>
           </tr>
         </thead>
@@ -147,8 +147,10 @@ export function ProjectsList({ projects: initialProjects }: Props) {
                   {project.project_client || "-"}
                 </td>
                 <td className="px-4 py-3.5 text-center">
-                  <Button variant="outline" size="sm" className="h-7 text-xs px-3" asChild>
-                    <Link href={`/projects/${project.id}`}>상세보기</Link>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" asChild>
+                    <Link href={`/projects/${project.id}`}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Link>
                   </Button>
                 </td>
                 <td className="px-4 py-3.5 text-center">

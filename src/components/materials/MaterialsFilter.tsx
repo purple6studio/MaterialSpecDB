@@ -202,7 +202,7 @@ export function MaterialsFilter({ materials: initialMaterials, categories }: Pro
                 </button>
               </th>
               <th className="px-4 py-3 w-20 text-center text-xs font-medium text-muted-foreground">수정</th>
-              <th className="px-4 py-3 w-12" />
+              <th className="px-4 py-3 w-12 text-center text-xs font-medium text-muted-foreground">삭제</th>
             </tr>
           </thead>
           <tbody>
