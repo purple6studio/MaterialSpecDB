@@ -34,6 +34,7 @@ export function MaterialsFilter({ materials: initialMaterials, categories }: Pro
   const [search, setSearch] = useState("");
   const [selectedCat, setSelectedCat] = useState("all");
   const [selected, setSelected] = useState<Material | null>(null);
+  const [editCategoryId, setEditCategoryId] = useState("");
   const [editItem, setEditItem] = useState("");
   const [editFinish, setEditFinish] = useState("");
   const [editSize, setEditSize] = useState("");
@@ -89,10 +90,10 @@ export function MaterialsFilter({ materials: initialMaterials, categories }: Pro
     });
   }, [filtered, sortKey, sortDir, categoryMap]);
 
-  const selectedCat2 = selected ? categoryMap[selected.category_id] : null;
 
   function openEdit(m: Material) {
     setSelected(m);
+    setEditCategoryId(m.category_id ?? "");
     setEditItem(m.material_item);
     setEditFinish(m.material_finish ?? "");
     setEditSize(m.material_size ?? "");
@@ -114,7 +115,7 @@ export function MaterialsFilter({ materials: initialMaterials, categories }: Pro
     setSaveError(null);
     const result = await updateMaterial(
       selected.id,
-      { material_item: editItem, material_finish: editFinish, material_size: editSize },
+      { category_id: editCategoryId, material_item: editItem, material_finish: editFinish, material_size: editSize },
       editImageFile
     );
     setSaving(false);
@@ -124,6 +125,7 @@ export function MaterialsFilter({ materials: initialMaterials, categories }: Pro
     }
     const updated: Material = {
       ...selected,
+      category_id: editCategoryId,
       material_item: editItem,
       material_finish: editFinish,
       material_size: editSize,
@@ -286,12 +288,21 @@ export function MaterialsFilter({ materials: initialMaterials, categories }: Pro
             </div>
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
 
-            {/* 카테고리 (읽기 전용) */}
+            {/* 카테고리 드롭다운 */}
             <div>
               <label className="text-xs text-muted-foreground block mb-1">카테고리</label>
-              <div className="text-sm font-medium px-3 py-2 rounded-md border bg-muted/40">
-                {selectedCat2 ? `${selectedCat2.category_kor} (${selectedCat2.category_eng})` : "-"}
-              </div>
+              <Select value={editCategoryId} onValueChange={setEditCategoryId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="카테고리 선택" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.category_kor} ({c.category_eng})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* 자재명 */}

@@ -102,7 +102,7 @@ export async function deleteMaterialCategory(id: string): Promise<ActionState> {
 
 export async function updateMaterial(
   id: string,
-  data: { material_item: string; material_finish: string; material_size: string },
+  data: { category_id: string; material_item: string; material_finish: string; material_size: string },
   imageFile?: File | null
 ): Promise<ActionState> {
   let material_image: string | undefined;
@@ -120,6 +120,7 @@ export async function updateMaterial(
   const { error } = await supabase
     .from("materials")
     .update({
+      category_id: data.category_id || null,
       material_item: data.material_item,
       material_finish: data.material_finish || null,
       material_size: data.material_size || null,
