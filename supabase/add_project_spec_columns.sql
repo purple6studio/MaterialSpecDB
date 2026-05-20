@@ -1,0 +1,12 @@
+-- project_specs 테이블에 누락된 컬럼 추가
+-- Supabase SQL Editor에서 실행하세요.
+
+ALTER TABLE project_specs
+  ADD COLUMN IF NOT EXISTS code_suffix  TEXT NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS contact_id   TEXT REFERENCES distributor_contacts(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS quantity     TEXT NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS area         TEXT NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS location     TEXT NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS description  TEXT NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS price        TEXT NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS delivery     TEXT NOT NULL DEFAULT '';

@@ -3,8 +3,16 @@
 import { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { SortIcon } from "@/components/ui/sort-icon";
-import { Trash2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Trash2, Search } from "lucide-react";
 import { deleteProject } from "@/lib/actions";
 import type { Project } from "@/types";
 
@@ -21,6 +29,13 @@ export function ProjectsList({ projects: initialProjects }: Props) {
   const [, startTransition] = useTransition();
   const [sortKey, setSortKey] = useState<SortKey>("project_year");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [search, setSearch] = useState("");
+  const [selectedYear, setSelectedYear] = useState("all");
+
+  const years = useMemo(() => {
+    const set = new Set(projects.map((p) => p.project_year).filter(Boolean));
+    return [...set].sort((a, b) => b - a);
+  }, [projects]);
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -36,20 +51,60 @@ export function ProjectsList({ projects: initialProjects }: Props) {
     });
   }
 
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return projects.filter((p) => {
+      const matchYear = selectedYear === "all" || String(p.project_year) === selectedYear;
+      const matchSearch =
+        !q ||
+        p.project_name.toLowerCase().includes(q) ||
+        (p.project_client ?? "").toLowerCase().includes(q);
+      return matchYear && matchSearch;
+    });
+  }, [projects, search, selectedYear]);
+
   const sorted = useMemo(() => {
-    return [...projects].sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       let cmp = 0;
       if (sortKey === "project_name") cmp = a.project_name.localeCompare(b.project_name, "ko");
       else if (sortKey === "project_client") cmp = (a.project_client ?? "").localeCompare(b.project_client ?? "", "ko");
       else cmp = (a.project_year ?? 0) - (b.project_year ?? 0);
       return sortDir === "asc" ? cmp : -cmp;
     });
-  }, [projects, sortKey, sortDir]);
+  }, [filtered, sortKey, sortDir]);
 
   const thClass = "flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors";
 
   return (
-    <div className="rounded-xl border overflow-hidden">
+    <div className="space-y-4">
+      {/* Toolbar */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="프로젝트명, 클라이언트 검색..."
+            className="pl-9"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <Select value={selectedYear} onValueChange={setSelectedYear}>
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="연도" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">전체 연도</SelectItem>
+            {years.map((y) => (
+              <SelectItem key={y} value={String(y)}>{y}년</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <span className="text-sm text-muted-foreground ml-auto">
+          {sorted.length}개 결과
+        </span>
+      </div>
+
+      <div className="rounded-xl border overflow-hidden">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b bg-muted/40">
@@ -76,7 +131,7 @@ export function ProjectsList({ projects: initialProjects }: Props) {
           {sorted.length === 0 ? (
             <tr>
               <td colSpan={5} className="text-center py-16 text-muted-foreground">
-                등록된 프로젝트가 없습니다.
+                {search || selectedYear !== "all" ? "검색 결과가 없습니다." : "등록된 프로젝트가 없습니다."}
               </td>
             </tr>
           ) : (
@@ -112,6 +167,7 @@ export function ProjectsList({ projects: initialProjects }: Props) {
           )}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

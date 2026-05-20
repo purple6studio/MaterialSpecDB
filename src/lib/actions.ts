@@ -100,6 +100,37 @@ export async function deleteMaterialCategory(id: string): Promise<ActionState> {
   return { success: true };
 }
 
+export async function updateMaterial(
+  id: string,
+  data: { material_item: string; material_finish: string; material_size: string },
+  imageFile?: File | null
+): Promise<ActionState> {
+  let material_image: string | undefined;
+
+  if (imageFile && imageFile.size > 0) {
+    const ext = imageFile.name.split(".").pop() ?? "jpg";
+    const { error: uploadError } = await supabase.storage
+      .from("material-images")
+      .upload(`${id}.${ext}`, imageFile, { contentType: imageFile.type, upsert: true });
+    if (uploadError) return { success: false, error: `이미지 업로드 실패: ${uploadError.message}` };
+    const { data: urlData } = supabase.storage.from("material-images").getPublicUrl(`${id}.${ext}`);
+    material_image = urlData.publicUrl;
+  }
+
+  const { error } = await supabase
+    .from("materials")
+    .update({
+      material_item: data.material_item,
+      material_finish: data.material_finish || null,
+      material_size: data.material_size || null,
+      ...(material_image !== undefined ? { material_image } : {}),
+    })
+    .eq("id", id);
+  if (error) return { success: false, error: error.message };
+  revalidatePath("/materials");
+  return { success: true };
+}
+
 export async function deleteMaterial(id: string): Promise<ActionState> {
   const { error } = await supabase.from("materials").delete().eq("id", id);
   if (error) return { success: false, error: error.message };

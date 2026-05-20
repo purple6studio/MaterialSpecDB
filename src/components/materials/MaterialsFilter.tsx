@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo, useTransition } from "react";
-import { Search, ImageIcon, Trash2 } from "lucide-react";
+import { useState, useMemo, useTransition, useRef } from "react";
+import { Search, ImageIcon, Trash2, Pencil } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SortIcon } from "@/components/ui/sort-icon";
@@ -18,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { deleteMaterial } from "@/lib/actions";
+import { deleteMaterial, updateMaterial } from "@/lib/actions";
 import type { Material, MaterialCategory } from "@/types";
 
 type SortKey = "category" | "material_item" | "material_finish" | "material_size";
@@ -34,10 +34,18 @@ export function MaterialsFilter({ materials: initialMaterials, categories }: Pro
   const [search, setSearch] = useState("");
   const [selectedCat, setSelectedCat] = useState("all");
   const [selected, setSelected] = useState<Material | null>(null);
+  const [editItem, setEditItem] = useState("");
+  const [editFinish, setEditFinish] = useState("");
+  const [editSize, setEditSize] = useState("");
+  const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   const [sortKey, setSortKey] = useState<SortKey>("material_item");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const categoryMap = useMemo(
     () => Object.fromEntries(categories.map((c) => [c.id, c])),
@@ -82,6 +90,48 @@ export function MaterialsFilter({ materials: initialMaterials, categories }: Pro
   }, [filtered, sortKey, sortDir, categoryMap]);
 
   const selectedCat2 = selected ? categoryMap[selected.category_id] : null;
+
+  function openEdit(m: Material) {
+    setSelected(m);
+    setEditItem(m.material_item);
+    setEditFinish(m.material_finish ?? "");
+    setEditSize(m.material_size ?? "");
+    setEditImagePreview(m.material_image ?? null);
+    setEditImageFile(null);
+    setSaveError(null);
+  }
+
+  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setEditImageFile(file);
+    setEditImagePreview(URL.createObjectURL(file));
+  }
+
+  async function handleSave() {
+    if (!selected) return;
+    setSaving(true);
+    setSaveError(null);
+    const result = await updateMaterial(
+      selected.id,
+      { material_item: editItem, material_finish: editFinish, material_size: editSize },
+      editImageFile
+    );
+    setSaving(false);
+    if (!result?.success) {
+      setSaveError(result?.error ?? "저장 실패");
+      return;
+    }
+    const updated: Material = {
+      ...selected,
+      material_item: editItem,
+      material_finish: editFinish,
+      material_size: editSize,
+      material_image: editImagePreview,
+    };
+    setMaterials((prev) => prev.map((m) => (m.id === selected.id ? updated : m)));
+    setSelected(null);
+  }
 
   function handleDelete(id: string) {
     setDeletingId(id);
@@ -151,7 +201,7 @@ export function MaterialsFilter({ materials: initialMaterials, categories }: Pro
                   SIZE <SortIcon active={sortKey === "material_size"} dir={sortDir} />
                 </button>
               </th>
-              <th className="px-4 py-3 w-20 text-center text-xs font-medium text-muted-foreground">상세보기</th>
+              <th className="px-4 py-3 w-20 text-center text-xs font-medium text-muted-foreground">수정</th>
               <th className="px-4 py-3 w-12" />
             </tr>
           </thead>
@@ -190,8 +240,8 @@ export function MaterialsFilter({ materials: initialMaterials, categories }: Pro
                     <td className="px-4 py-2 text-sm text-muted-foreground text-center">{m.material_finish || "-"}</td>
                     <td className="px-4 py-2 text-xs text-muted-foreground font-mono text-center">{m.material_size || "-"}</td>
                     <td className="px-4 py-2 text-center">
-                      <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={() => setSelected(m)}>
-                        상세
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => openEdit(m)}>
+                        <Pencil className="h-3.5 w-3.5" />
                       </Button>
                     </td>
                     <td className="px-4 py-2">
@@ -213,39 +263,63 @@ export function MaterialsFilter({ materials: initialMaterials, categories }: Pro
         </table>
       </div>
 
-      {/* Detail Modal */}
+      {/* Edit Modal */}
       <Dialog open={selected !== null} onOpenChange={(open) => { if (!open) setSelected(null); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{selected?.material_item}</DialogTitle>
+            <DialogTitle>자재 수정</DialogTitle>
           </DialogHeader>
-          <div className="px-6 pb-6 space-y-5">
-            <div className="w-full aspect-video rounded-lg overflow-hidden bg-muted flex items-center justify-center border">
-              {selected?.material_image ? (
-                <img src={selected.material_image} alt={selected.material_item} className="w-full h-full object-cover" />
+          <div className="px-6 pb-6 space-y-4">
+            {/* 이미지 */}
+            <div
+              className="w-full aspect-video rounded-lg overflow-hidden bg-muted flex items-center justify-center border cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {editImagePreview ? (
+                <img src={editImagePreview} alt="미리보기" className="w-full h-full object-cover" />
               ) : (
                 <div className="flex flex-col items-center gap-2 text-muted-foreground">
                   <ImageIcon className="h-10 w-10 opacity-30" />
-                  <span className="text-xs">이미지 없음</span>
+                  <span className="text-xs">클릭하여 이미지 변경</span>
                 </div>
               )}
             </div>
-            <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+
+            {/* 카테고리 (읽기 전용) */}
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">카테고리</label>
+              <div className="text-sm font-medium px-3 py-2 rounded-md border bg-muted/40">
+                {selectedCat2 ? `${selectedCat2.category_kor} (${selectedCat2.category_eng})` : "-"}
+              </div>
+            </div>
+
+            {/* 자재명 */}
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">자재명</label>
+              <Input value={editItem} onChange={(e) => setEditItem(e.target.value)} />
+            </div>
+
+            {/* FINISH / SIZE */}
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <dt className="text-xs text-muted-foreground mb-0.5">카테고리</dt>
-                <dd className="font-medium">
-                  {selectedCat2 ? `${selectedCat2.category_kor} (${selectedCat2.category_eng})` : "-"}
-                </dd>
+                <label className="text-xs text-muted-foreground block mb-1">FINISH</label>
+                <Input value={editFinish} onChange={(e) => setEditFinish(e.target.value)} placeholder="-" />
               </div>
               <div>
-                <dt className="text-xs text-muted-foreground mb-0.5">FINISH</dt>
-                <dd className="font-medium">{selected?.material_finish || "-"}</dd>
+                <label className="text-xs text-muted-foreground block mb-1">SIZE</label>
+                <Input value={editSize} onChange={(e) => setEditSize(e.target.value)} placeholder="-" className="font-mono" />
               </div>
-              <div>
-                <dt className="text-xs text-muted-foreground mb-0.5">SIZE</dt>
-                <dd className="font-mono font-medium">{selected?.material_size || "-"}</dd>
-              </div>
-            </dl>
+            </div>
+
+            {saveError && <p className="text-xs text-destructive">{saveError}</p>}
+
+            <div className="flex justify-end gap-2 pt-1">
+              <Button variant="outline" onClick={() => setSelected(null)}>취소</Button>
+              <Button onClick={handleSave} disabled={saving || !editItem.trim()}>
+                {saving ? "저장 중..." : "저장"}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

@@ -256,7 +256,7 @@ export function EditSpecModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>추가 정보 입력</DialogTitle>
+          <DialogTitle>스펙 수정</DialogTitle>
         </DialogHeader>
         <div className="max-h-[75vh] overflow-y-auto px-6 pb-6 space-y-5">
 

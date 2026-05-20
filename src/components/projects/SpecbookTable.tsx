@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { deleteProjectSpec } from "@/lib/actions";
 import { AddSpecModal } from "./AddSpecModal";
@@ -84,7 +84,7 @@ export function SpecbookTable({
                 <th className="text-center font-bold text-foreground py-3 px-3 whitespace-nowrap bg-primary/10 border border-border">DISTRIBUTOR</th>
                 <th className="text-center font-bold text-foreground py-3 px-3 whitespace-nowrap bg-primary/10 border border-border">CONTACT NO.</th>
                 <th className="text-center font-bold text-foreground py-3 px-3 whitespace-nowrap bg-primary/10 border border-border">LOCATION</th>
-                <th className="text-center font-bold text-foreground py-3 px-3 whitespace-nowrap bg-muted border border-border">추가 정보 입력</th>
+                <th className="text-center font-bold text-foreground py-3 px-3 whitespace-nowrap bg-muted border border-border">수정</th>
                 {isDraft && <th className="text-center font-bold text-foreground py-3 px-3 whitespace-nowrap bg-muted border border-border">삭제</th>}
               </tr>
             </thead>
@@ -134,10 +134,10 @@ export function SpecbookTable({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7"
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground"
                         onClick={() => setEditingSpec(item)}
                       >
-                        <Plus className="h-4 w-4" />
+                        <Pencil className="h-3.5 w-3.5" />
                       </Button>
                     </td>
                     {isDraft && (
