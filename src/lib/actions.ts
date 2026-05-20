@@ -147,6 +147,22 @@ export async function deleteDistributor(id: string): Promise<ActionState> {
   return { success: true };
 }
 
+export async function updateDistributorInfo(
+  id: string,
+  data: { note: string; homepage: string }
+): Promise<ActionState> {
+  const { error } = await supabase
+    .from("distributors")
+    .update({
+      note: data.note || null,
+      homepage: data.homepage || null,
+    })
+    .eq("id", id);
+  if (error) return { success: false, error: error.message };
+  revalidatePath(`/distributors/${id}`);
+  return { success: true };
+}
+
 export async function deleteProject(id: string): Promise<ActionState> {
   const { error } = await supabase.from("projects").delete().eq("id", id);
   if (error) return { success: false, error: error.message };

@@ -24,6 +24,7 @@ import {
   removeMaterialFromDistributor,
   addProjectToDistributor,
   removeProjectFromDistributor,
+  updateDistributorInfo,
 } from "@/lib/actions";
 import type { Distributor, DistributorContact, DistributorTypeRecord, Material, MaterialCategory, Project } from "@/types";
 
@@ -49,6 +50,30 @@ export function DistributorDetail({
   distributorTypes,
 }: Props) {
   const [, startTransition] = useTransition();
+
+  // ── 비고 / 홈페이지 ──────────────────────────────────
+  const [note, setNote] = useState(distributor.note ?? "");
+  const [homepage, setHomepage] = useState(distributor.homepage ?? "");
+  const [editingInfo, setEditingInfo] = useState(false);
+  const [noteInput, setNoteInput] = useState("");
+  const [homepageInput, setHomepageInput] = useState("");
+
+  function startEditInfo() {
+    setNoteInput(note);
+    setHomepageInput(homepage);
+    setEditingInfo(true);
+  }
+
+  function handleSaveInfo() {
+    startTransition(async () => {
+      const result = await updateDistributorInfo(distributor.id, { note: noteInput, homepage: homepageInput });
+      if (result?.success) {
+        setNote(noteInput);
+        setHomepage(homepageInput);
+        setEditingInfo(false);
+      }
+    });
+  }
 
   // ── 담당자 ───────────────────────────────────────────
   const [contacts, setContacts] = useState<DistributorContact[]>(distributor.contacts);
@@ -212,28 +237,68 @@ export function DistributorDetail({
             {distributor.address}
           </p>
         )}
-        {distributor.note && (
-          <p className="text-sm text-muted-foreground mt-3 leading-relaxed border-l-2 border-muted pl-3">
-            {distributor.note}
-          </p>
-        )}
       </div>
 
-      {/* ── 홈페이지 ─────────────────────────────────────── */}
-      {distributor.homepage && (
-        <div>
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">홈페이지</h2>
-          <a
-            href={distributor.homepage}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-sm text-primary hover:underline"
-          >
-            <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-            {distributor.homepage}
-          </a>
+      {/* ── 비고 / 홈페이지 ──────────────────────────────── */}
+      <div className="border rounded-lg p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">정보</h2>
+          {!editingInfo ? (
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={startEditInfo}>
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+          ) : (
+            <div className="flex gap-1">
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:text-primary" onClick={handleSaveInfo}>
+                <Check className="h-3.5 w-3.5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={() => setEditingInfo(false)}>
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* 비고 */}
+        <div className="space-y-1">
+          <label className="text-xs text-muted-foreground">비고</label>
+          {editingInfo ? (
+            <textarea
+              value={noteInput}
+              onChange={(e) => setNoteInput(e.target.value)}
+              placeholder="업체 특이사항, 시공 분야 등"
+              className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-none h-20"
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">{note || "-"}</p>
+          )}
+        </div>
+
+        {/* 홈페이지 */}
+        <div className="space-y-1">
+          <label className="text-xs text-muted-foreground">홈페이지</label>
+          {editingInfo ? (
+            <Input
+              value={homepageInput}
+              onChange={(e) => setHomepageInput(e.target.value)}
+              placeholder="https://example.com"
+              className="h-8 text-sm"
+            />
+          ) : homepage ? (
+            <a
+              href={homepage}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-sm text-primary hover:underline"
+            >
+              <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+              {homepage}
+            </a>
+          ) : (
+            <p className="text-sm text-muted-foreground">-</p>
+          )}
+        </div>
+      </div>
 
       {/* ── 담당자 ───────────────────────────────────────── */}
       <div>
@@ -284,14 +349,14 @@ export function DistributorDetail({
                       {isEditing
                         ? <PhoneInput value={editForm.phone} onChange={(v) => setEditForm((f) => ({ ...f, phone: v }))} compact />
                         : c.phone
-                          ? <span className="flex items-center gap-1 text-muted-foreground text-xs"><Phone className="h-3 w-3" />{c.phone}</span>
+                          ? <span className="flex items-center gap-1 text-muted-foreground text-xs"><Phone className="h-3.5 w-3.5 shrink-0" />{c.phone}</span>
                           : <span className="text-muted-foreground">-</span>}
                     </td>
                     <td className="px-3 py-2">
                       {isEditing
                         ? <Input value={editForm.email} onChange={(e) => setEditForm((f) => ({ ...f, email: e.target.value }))} className="h-7 text-xs" />
                         : c.email
-                          ? <span className="flex items-center gap-1 text-muted-foreground text-xs"><Mail className="h-3 w-3" />{c.email}</span>
+                          ? <span className="flex items-center gap-1 text-muted-foreground text-xs"><Mail className="h-3.5 w-3.5 shrink-0" />{c.email}</span>
                           : <span className="text-muted-foreground">-</span>}
                     </td>
                     <td className="px-3 py-2">
