@@ -110,14 +110,14 @@ export async function getMaterialsForDistributor(distributorId: string): Promise
   return (data.map((row) => row.material).filter(Boolean)) as unknown as Material[];
 }
 
-// 마감재 리스트: 자재 ID별 공급업체명 맵 (material_id → company_name[])
-export async function getMaterialDistributorNameLinks(): Promise<{ material_id: string; company_name: string }[]> {
+// 마감재 리스트: 자재 ID별 공급업체 (material_id → {id, name})
+export async function getMaterialDistributorNameLinks(): Promise<{ material_id: string; distributor_id: string; company_name: string }[]> {
   const { data, error } = await supabase
     .from("material_distributor_links")
-    .select("material_id, distributor:distributors(company_name)");
+    .select("material_id, distributor_id, distributor:distributors(company_name)");
   if (error) throw error;
-  return (data as unknown as { material_id: string; distributor: { company_name: string } }[])
-    .map((r) => ({ material_id: r.material_id, company_name: r.distributor.company_name }));
+  return (data as unknown as { material_id: string; distributor_id: string; distributor: { company_name: string } }[])
+    .map((r) => ({ material_id: r.material_id, distributor_id: r.distributor_id, company_name: r.distributor.company_name }));
 }
 
 // 마감재 업체 타입인 업체 목록

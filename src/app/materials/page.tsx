@@ -12,10 +12,9 @@ export default async function MaterialsPage() {
     getMaterialDistributorNameLinks(),
   ]);
 
-  const distributorLinkMap = new Map<string, string[]>();
+  const distributorLinkMap = new Map<string, { id: string; name: string }>();
   for (const link of distributorLinks) {
-    if (!distributorLinkMap.has(link.material_id)) distributorLinkMap.set(link.material_id, []);
-    distributorLinkMap.get(link.material_id)!.push(link.company_name);
+    distributorLinkMap.set(link.material_id, { id: link.distributor_id, name: link.company_name });
   }
 
   return (
@@ -32,6 +31,7 @@ export default async function MaterialsPage() {
         materials={materials}
         categories={categories}
         distributorLinkMap={distributorLinkMap}
+        distributors={distributors}
       />
     </div>
   );

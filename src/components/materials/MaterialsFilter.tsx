@@ -18,8 +18,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { deleteMaterial, updateMaterial } from "@/lib/actions";
-import type { Material, MaterialCategory } from "@/types";
+import { deleteMaterial, updateMaterial, updateMaterialDistributor } from "@/lib/actions";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { ChevronsUpDown, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { Material, MaterialCategory, Distributor } from "@/types";
 
 type SortKey = "category" | "material_item" | "material_finish" | "material_size";
 type SortDir = "asc" | "desc";
@@ -27,10 +31,11 @@ type SortDir = "asc" | "desc";
 interface Props {
   materials: Material[];
   categories: MaterialCategory[];
-  distributorLinkMap?: Map<string, string[]>;
+  distributorLinkMap?: Map<string, { id: string; name: string }>;
+  distributors?: Distributor[];
 }
 
-export function MaterialsFilter({ materials: initialMaterials, categories, distributorLinkMap = new Map() }: Props) {
+export function MaterialsFilter({ materials: initialMaterials, categories, distributorLinkMap = new Map(), distributors = [] }: Props) {
   const [materials, setMaterials] = useState<Material[]>(initialMaterials);
   const [search, setSearch] = useState("");
   const [selectedCat, setSelectedCat] = useState("all");
@@ -39,6 +44,8 @@ export function MaterialsFilter({ materials: initialMaterials, categories, distr
   const [editItem, setEditItem] = useState("");
   const [editFinish, setEditFinish] = useState("");
   const [editSize, setEditSize] = useState("");
+  const [editDistributorId, setEditDistributorId] = useState("");
+  const [distributorPickerOpen, setDistributorPickerOpen] = useState(false);
   const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
@@ -98,6 +105,7 @@ export function MaterialsFilter({ materials: initialMaterials, categories, distr
     setEditItem(m.material_item);
     setEditFinish(m.material_finish ?? "");
     setEditSize(m.material_size ?? "");
+    setEditDistributorId(distributorLinkMap.get(m.id)?.id ?? "");
     setEditImagePreview(m.material_image ?? null);
     setEditImageFile(null);
     setSaveError(null);
@@ -114,25 +122,34 @@ export function MaterialsFilter({ materials: initialMaterials, categories, distr
     if (!selected) return;
     setSaving(true);
     setSaveError(null);
-    const result = await updateMaterial(
-      selected.id,
-      { category_id: editCategoryId, material_item: editItem, material_finish: editFinish, material_size: editSize },
-      editImageFile
-    );
+
+    const prevDistributorId = distributorLinkMap.get(selected.id)?.id ?? "";
+    const [matResult, distResult] = await Promise.all([
+      updateMaterial(
+        selected.id,
+        { category_id: editCategoryId, material_item: editItem, material_finish: editFinish, material_size: editSize },
+        editImageFile
+      ),
+      editDistributorId !== prevDistributorId
+        ? updateMaterialDistributor(selected.id, editDistributorId || null)
+        : Promise.resolve({ success: true } as { success: boolean }),
+    ]);
+
     setSaving(false);
-    if (!result?.success) {
-      setSaveError(result?.error ?? "저장 실패");
-      return;
+    if (!matResult?.success) { setSaveError(matResult?.error ?? "저장 실패"); return; }
+    if (!distResult?.success) { setSaveError(distResult?.error ?? "저장 실패"); return; }
+
+    if (editDistributorId !== prevDistributorId) {
+      const newName = distributors.find((d) => d.id === editDistributorId)?.company_name;
+      if (newName) distributorLinkMap.set(selected.id, { id: editDistributorId, name: newName });
+      else distributorLinkMap.delete(selected.id);
     }
-    const updated: Material = {
-      ...selected,
-      category_id: editCategoryId,
-      material_item: editItem,
-      material_finish: editFinish,
-      material_size: editSize,
-      material_image: editImagePreview,
-    };
-    setMaterials((prev) => prev.map((m) => (m.id === selected.id ? updated : m)));
+
+    setMaterials((prev) => prev.map((m) =>
+      m.id === selected.id
+        ? { ...m, category_id: editCategoryId, material_item: editItem, material_finish: editFinish, material_size: editSize, material_image: editImagePreview }
+        : m
+    ));
     setSelected(null);
   }
 
@@ -242,7 +259,7 @@ export function MaterialsFilter({ materials: initialMaterials, categories, distr
                     </td>
                     <td className="px-4 py-2 font-medium text-center">{m.material_item}</td>
                     <td className="px-4 py-2 text-sm text-center">
-                      {(distributorLinkMap.get(m.id) ?? []).join(", ") || <span className="text-muted-foreground">-</span>}
+                      {distributorLinkMap.get(m.id)?.name ?? <span className="text-muted-foreground">-</span>}
                     </td>
                     <td className="px-4 py-2 text-sm text-muted-foreground text-center">{m.material_finish || "-"}</td>
                     <td className="px-4 py-2 text-xs text-muted-foreground font-mono text-center">{m.material_size || "-"}</td>
@@ -315,6 +332,51 @@ export function MaterialsFilter({ materials: initialMaterials, categories, distr
               <label className="text-xs text-muted-foreground block mb-1">자재명</label>
               <Input value={editItem} onChange={(e) => setEditItem(e.target.value)} />
             </div>
+
+            {/* 공급업체 */}
+            {distributors.length > 0 && (
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">공급업체</label>
+                <Popover open={distributorPickerOpen} onOpenChange={setDistributorPickerOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      role="combobox"
+                      className="w-full justify-between font-normal"
+                    >
+                      {editDistributorId
+                        ? distributors.find((d) => d.id === editDistributorId)?.company_name
+                        : "업체 선택"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" style={{ width: "var(--radix-popover-trigger-width)" }}>
+                    <Command>
+                      <CommandInput placeholder="업체 검색..." />
+                      <CommandList>
+                        <CommandEmpty>검색 결과가 없습니다.</CommandEmpty>
+                        <CommandGroup>
+                          {distributors.map((d) => (
+                            <CommandItem
+                              key={d.id}
+                              value={d.company_name}
+                              onSelect={() => {
+                                setEditDistributorId(d.id === editDistributorId ? "" : d.id);
+                                setDistributorPickerOpen(false);
+                              }}
+                            >
+                              <Check className={cn("mr-2 h-4 w-4", editDistributorId === d.id ? "opacity-100" : "opacity-0")} />
+                              {d.company_name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
 
             {/* FINISH / SIZE */}
             <div className="grid grid-cols-2 gap-3">

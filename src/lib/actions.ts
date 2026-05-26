@@ -290,6 +290,28 @@ export async function removeCategoryFromDistributor(
   return { success: true };
 }
 
+// 마감재 리스트에서 공급업체 교체 (1:1)
+export async function updateMaterialDistributor(
+  materialId: string,
+  distributorId: string | null
+): Promise<ActionState> {
+  const { error: delErr } = await supabase
+    .from("material_distributor_links")
+    .delete()
+    .eq("material_id", materialId);
+  if (delErr) return { success: false, error: delErr.message };
+
+  if (distributorId) {
+    const { error } = await supabase
+      .from("material_distributor_links")
+      .insert({ material_id: materialId, distributor_id: distributorId });
+    if (error) return { success: false, error: error.message };
+  }
+
+  revalidatePath("/materials");
+  return { success: true };
+}
+
 // ── 마감재 ↔ 업체 링크 ──────────────────────────────────────────────────────
 
 export async function addMaterialToDistributor(
