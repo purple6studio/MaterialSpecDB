@@ -70,7 +70,8 @@ export async function createDistributor(
     }
   }
 
-  revalidatePath("/distributors");
+  revalidatePath("/distributors/material");
+  revalidatePath("/distributors/other");
   return { success: true };
 }
 
@@ -143,7 +144,8 @@ export async function deleteMaterial(id: string): Promise<ActionState> {
 export async function deleteDistributor(id: string): Promise<ActionState> {
   const { error } = await supabase.from("distributors").delete().eq("id", id);
   if (error) return { success: false, error: error.message };
-  revalidatePath("/distributors");
+  revalidatePath("/distributors/material");
+  revalidatePath("/distributors/other");
   return { success: true };
 }
 
@@ -158,6 +160,8 @@ export async function updateDistributorInfo(
   if (error) return { success: false, error: error.message };
 
   revalidatePath(`/distributors/${id}`);
+  revalidatePath("/distributors/material");
+  revalidatePath("/distributors/other");
   return { success: true };
 }
 
