@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { CategoryCombobox } from "@/components/materials/CategoryCombobox";
-import { Plus, ImageIcon, Building2, Check, X } from "lucide-react";
+import { Plus, ImageIcon, ChevronsUpDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { MaterialCategory, Distributor } from "@/types";
 
@@ -26,7 +26,7 @@ interface Props {
 export function AddMaterialModal({ categories, distributors = [] }: Props) {
   const [open, setOpen] = useState(false);
   const [categoryId, setCategoryId] = useState("");
-  const [selectedDistributors, setSelectedDistributors] = useState<string[]>([]);
+  const [selectedDistributor, setSelectedDistributor] = useState("");
   const [distributorPickerOpen, setDistributorPickerOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [droppedFile, setDroppedFile] = useState<File | null>(null);
@@ -36,11 +36,6 @@ export function AddMaterialModal({ categories, distributors = [] }: Props) {
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  function toggleDistributor(id: string) {
-    setSelectedDistributors((prev) =>
-      prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id]
-    );
-  }
 
   useEffect(() => {
     return () => { if (previewUrl) URL.revokeObjectURL(previewUrl); };
@@ -63,13 +58,13 @@ export function AddMaterialModal({ categories, distributors = [] }: Props) {
     if (droppedFile && (!(inputFile instanceof File) || inputFile.size === 0)) {
       formData.set("material_image", droppedFile);
     }
-    formData.set("distributor_ids", JSON.stringify(selectedDistributors));
+    formData.set("distributor_ids", JSON.stringify(selectedDistributor ? [selectedDistributor] : []));
     startTransition(async () => {
       const result = await createMaterial(null, formData);
       if (result?.success) {
         setOpen(false);
         setCategoryId("");
-        setSelectedDistributors([]);
+        setSelectedDistributor("");
         setPreviewUrl(null);
         setDroppedFile(null);
         formRef.current?.reset();
@@ -83,7 +78,7 @@ export function AddMaterialModal({ categories, distributors = [] }: Props) {
     setOpen(next);
     if (!next) {
       setCategoryId("");
-      setSelectedDistributors([]);
+      setSelectedDistributor("");
       setPreviewUrl(null);
       setDroppedFile(null);
       setError(null);
@@ -160,6 +155,52 @@ export function AddMaterialModal({ categories, distributors = [] }: Props) {
             <Input name="material_item" placeholder="자재명 입력" required />
           </div>
 
+          {/* 공급업체 */}
+          {distributors.length > 0 && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">공급업체</label>
+              <Popover open={distributorPickerOpen} onOpenChange={setDistributorPickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={distributorPickerOpen}
+                    className="w-full justify-between font-normal"
+                  >
+                    {selectedDistributor
+                      ? distributors.find((d) => d.id === selectedDistributor)?.company_name
+                      : "업체 선택"}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0" style={{ width: "var(--radix-popover-trigger-width)" }}>
+                  <Command>
+                    <CommandInput placeholder="업체 검색..." />
+                    <CommandList>
+                      <CommandEmpty>검색 결과가 없습니다.</CommandEmpty>
+                      <CommandGroup>
+                        {distributors.map((d) => (
+                          <CommandItem
+                            key={d.id}
+                            value={d.company_name}
+                            onSelect={() => {
+                              setSelectedDistributor(d.id === selectedDistributor ? "" : d.id);
+                              setDistributorPickerOpen(false);
+                            }}
+                          >
+                            <Check className={cn("mr-2 h-4 w-4", selectedDistributor === d.id ? "opacity-100" : "opacity-0")} />
+                            {d.company_name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
+
           {/* FINISH */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium">FINISH</label>
@@ -171,57 +212,6 @@ export function AddMaterialModal({ categories, distributors = [] }: Props) {
             <label className="text-sm font-medium">SIZE</label>
             <Input name="material_size" placeholder="예: 600x600mm (미입력 시 -)" />
           </div>
-
-          {/* 공급업체 */}
-          {distributors.length > 0 && (
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">공급업체</label>
-              <div className="flex flex-wrap gap-1">
-                {distributors
-                  .filter((d) => selectedDistributors.includes(d.id))
-                  .map((d) => (
-                    <span
-                      key={d.id}
-                      className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/5 px-2 py-px text-[10px] font-medium text-primary"
-                    >
-                      {d.company_name}
-                      <button type="button" onClick={() => toggleDistributor(d.id)} className="hover:text-destructive">
-                        <X className="h-3 w-3" />
-                      </button>
-                    </span>
-                  ))}
-                <Popover open={distributorPickerOpen} onOpenChange={setDistributorPickerOpen}>
-                  <PopoverTrigger asChild>
-                    <Button type="button" variant="outline" size="sm" className="h-6 gap-1 text-xs px-2">
-                      <Building2 className="h-3 w-3" />
-                      추가
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-56 p-0" align="start">
-                    <Command>
-                      <CommandInput placeholder="업체 검색..." className="h-8 text-xs" />
-                      <CommandList>
-                        <CommandEmpty className="py-4 text-center text-xs text-muted-foreground">결과 없음</CommandEmpty>
-                        <CommandGroup>
-                          {distributors.map((d) => (
-                            <CommandItem
-                              key={d.id}
-                              value={d.company_name}
-                              onSelect={() => toggleDistributor(d.id)}
-                              className="text-xs"
-                            >
-                              <Check className={cn("mr-2 h-3.5 w-3.5", selectedDistributors.includes(d.id) ? "opacity-100" : "opacity-0")} />
-                              {d.company_name}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-          )}
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 

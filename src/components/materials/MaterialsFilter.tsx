@@ -241,18 +241,8 @@ export function MaterialsFilter({ materials: initialMaterials, categories, distr
                       )}
                     </td>
                     <td className="px-4 py-2 font-medium text-center">{m.material_item}</td>
-                    <td className="px-4 py-2 text-center">
-                      {(distributorLinkMap.get(m.id) ?? []).length > 0 ? (
-                        <div className="flex flex-wrap justify-center gap-1">
-                          {(distributorLinkMap.get(m.id) ?? []).map((name) => (
-                            <span key={name} className="inline-block rounded-full border border-muted bg-muted/40 px-2 py-px text-[10px] text-muted-foreground">
-                              {name}
-                            </span>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">-</span>
-                      )}
+                    <td className="px-4 py-2 text-sm text-center">
+                      {(distributorLinkMap.get(m.id) ?? []).join(", ") || <span className="text-muted-foreground">-</span>}
                     </td>
                     <td className="px-4 py-2 text-sm text-muted-foreground text-center">{m.material_finish || "-"}</td>
                     <td className="px-4 py-2 text-xs text-muted-foreground font-mono text-center">{m.material_size || "-"}</td>
