@@ -70,6 +70,16 @@ export async function createDistributor(
     }
   }
 
+  const categoryIdsJson = formData.get("category_ids") as string;
+  if (categoryIdsJson) {
+    const categoryIds = JSON.parse(categoryIdsJson) as string[];
+    const rows = categoryIds.map((category_id) => ({ distributor_id: id, category_id }));
+    if (rows.length > 0) {
+      const { error: catErr } = await supabase.from("distributor_category_links").insert(rows);
+      if (catErr) return { success: false, error: catErr.message };
+    }
+  }
+
   revalidatePath("/distributors/material");
   revalidatePath("/distributors/other");
   return { success: true };

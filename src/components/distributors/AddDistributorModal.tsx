@@ -18,9 +18,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Plus, Trash2, Tag, Check, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { PhoneInput } from "@/components/ui/phone-input";
-import type { Distributor, DistributorContact, DistributorTypeRecord } from "@/types";
+import type { Distributor, DistributorContact, DistributorTypeRecord, MaterialCategory } from "@/types";
 
 interface ContactRow {
   name: string;
@@ -34,14 +37,23 @@ interface Props {
   defaultType?: string;
   lockType?: boolean;
   distributorTypes: DistributorTypeRecord[];
+  allCategories?: MaterialCategory[];
 }
 
-export function AddDistributorModal({ onSuccess, defaultType, lockType, distributorTypes }: Props) {
+export function AddDistributorModal({ onSuccess, defaultType, lockType, distributorTypes, allCategories = [] }: Props) {
   const [open, setOpen] = useState(false);
   const [distributorType, setDistributorType] = useState<string>(defaultType ?? "");
   const [contacts, setContacts] = useState<ContactRow[]>([{ name: "", role: "", phone: "", email: "" }]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  function toggleCategory(id: string) {
+    setSelectedCategories((prev) =>
+      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
+    );
+  }
 
   function addContact() {
     setContacts((prev) => [...prev, { name: "", role: "", phone: "", email: "" }]);
@@ -58,6 +70,7 @@ export function AddDistributorModal({ onSuccess, defaultType, lockType, distribu
   function resetForm() {
     setDistributorType(defaultType ?? "");
     setContacts([{ name: "", role: "", phone: "", email: "" }]);
+    setSelectedCategories([]);
     setError(null);
   }
 
@@ -66,6 +79,7 @@ export function AddDistributorModal({ onSuccess, defaultType, lockType, distribu
     const id = crypto.randomUUID();
     formData.set("id", id);
     formData.set("contacts", JSON.stringify(contacts));
+    formData.set("category_ids", JSON.stringify(selectedCategories));
     startTransition(async () => {
       const result = await createDistributor(null, formData);
       if (result?.success) {
@@ -153,6 +167,57 @@ export function AddDistributorModal({ onSuccess, defaultType, lockType, distribu
               className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-none h-20"
             />
           </div>
+
+          {/* 카테고리 */}
+          {allCategories.length > 0 && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">카테고리</label>
+              <div className="flex flex-wrap gap-1">
+                {allCategories
+                  .filter((c) => selectedCategories.includes(c.id))
+                  .map((cat) => (
+                    <span
+                      key={cat.id}
+                      className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/5 px-2 py-px text-[10px] font-medium text-primary"
+                    >
+                      {cat.category_kor}
+                      <button type="button" onClick={() => toggleCategory(cat.id)} className="hover:text-destructive">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                <Popover open={categoryPickerOpen} onOpenChange={setCategoryPickerOpen}>
+                  <PopoverTrigger asChild>
+                    <Button type="button" variant="outline" size="sm" className="h-6 gap-1 text-xs px-2">
+                      <Tag className="h-3 w-3" />
+                      추가
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-52 p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="카테고리 검색..." className="h-8 text-xs" />
+                      <CommandList>
+                        <CommandEmpty className="py-4 text-center text-xs text-muted-foreground">결과 없음</CommandEmpty>
+                        <CommandGroup>
+                          {allCategories.map((cat) => (
+                            <CommandItem
+                              key={cat.id}
+                              value={cat.category_kor}
+                              onSelect={() => toggleCategory(cat.id)}
+                              className="text-xs"
+                            >
+                              <Check className={cn("mr-2 h-3.5 w-3.5", selectedCategories.includes(cat.id) ? "opacity-100" : "opacity-0")} />
+                              {cat.category_kor}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          )}
 
           {/* 담당자 */}
           <div className="space-y-2">

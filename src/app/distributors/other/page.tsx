@@ -1,14 +1,15 @@
-import { getDistributors, getDistributorTypes, getAllDistributorCategoryLinks } from "@/lib/data";
+import { getDistributors, getDistributorTypes, getAllDistributorCategoryLinks, getMaterialCategories } from "@/lib/data";
 import { DistributorsFilter } from "@/components/distributors/DistributorsFilter";
 import type { MaterialCategory } from "@/types";
 
 export const metadata = { title: "기타 업체 | 마감재 DB" };
 
 export default async function OtherDistributorsPage() {
-  const [allDistributors, allTypes, categoryLinks] = await Promise.all([
+  const [allDistributors, allTypes, categoryLinks, allCategories] = await Promise.all([
     getDistributors(),
     getDistributorTypes(),
     getAllDistributorCategoryLinks(),
+    getMaterialCategories(),
   ]);
   const visibleTypes = allTypes.filter((t) => !t.is_material);
   const defaultType = visibleTypes[0]?.id ?? "other";
@@ -27,6 +28,7 @@ export default async function OtherDistributorsPage() {
         defaultType={defaultType}
         lockModal={false}
         categoryLinkMap={categoryLinkMap}
+        allCategories={allCategories}
       />
     </div>
   );

@@ -21,6 +21,7 @@ interface Props {
   defaultType?: string;
   lockModal?: boolean;
   categoryLinkMap?: Map<string, MaterialCategory[]>;
+  allCategories?: MaterialCategory[];
 }
 
 export function DistributorsFilter({
@@ -29,6 +30,7 @@ export function DistributorsFilter({
   defaultType,
   lockModal = false,
   categoryLinkMap = new Map(),
+  allCategories = [],
 }: Props) {
   const [distributors, setDistributors] = useState<Distributor[]>(initialDistributors);
   const [activeTab, setActiveTab] = useState<string>(defaultType ?? distributorTypes[0]?.id ?? "");
@@ -115,6 +117,7 @@ export function DistributorsFilter({
           defaultType={activeTab}
           lockType={lockModal}
           distributorTypes={distributorTypes}
+          allCategories={allCategories}
         />
       </div>
 
