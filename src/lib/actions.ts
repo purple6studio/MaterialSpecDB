@@ -244,6 +244,8 @@ export async function addCategoryToDistributor(
     .upsert({ distributor_id: distributorId, category_id: categoryId });
   if (error) return { success: false, error: error.message };
   revalidatePath(`/distributors/${distributorId}`);
+  revalidatePath("/distributors/material");
+  revalidatePath("/distributors/other");
   return { success: true };
 }
 
@@ -258,6 +260,8 @@ export async function removeCategoryFromDistributor(
     .eq("category_id", categoryId);
   if (error) return { success: false, error: error.message };
   revalidatePath(`/distributors/${distributorId}`);
+  revalidatePath("/distributors/material");
+  revalidatePath("/distributors/other");
   return { success: true };
 }
 
