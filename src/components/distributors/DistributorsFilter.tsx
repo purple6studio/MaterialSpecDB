@@ -182,6 +182,9 @@ export function DistributorsFilter({
                 </button>
               </th>
               <th className="px-4 py-3 text-left">
+                <span className="text-xs font-medium text-muted-foreground">카테고리</span>
+              </th>
+              <th className="px-4 py-3 text-left">
                 <span className="text-xs font-medium text-muted-foreground">비고</span>
               </th>
               <th className="px-4 py-3 text-left">
@@ -196,7 +199,7 @@ export function DistributorsFilter({
           <tbody>
             {sorted.length === 0 ? (
               <tr>
-                <td colSpan={5} className="text-center py-16 text-muted-foreground">
+                <td colSpan={6} className="text-center py-16 text-muted-foreground">
                   {search ? "검색 결과가 없습니다." : "등록된 업체가 없습니다."}
                 </td>
               </tr>
@@ -205,8 +208,10 @@ export function DistributorsFilter({
                 <tr key={v.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                   <td className="px-4 py-3">
                     <span className="font-medium">{v.company_name}</span>
-                    {(categoryLinkMap.get(v.id) ?? []).length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-1">
+                  </td>
+                  <td className="px-4 py-3 max-w-[200px]">
+                    {(categoryLinkMap.get(v.id) ?? []).length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
                         {(categoryLinkMap.get(v.id) ?? []).map((cat) => (
                           <span
                             key={cat.id}
@@ -216,6 +221,8 @@ export function DistributorsFilter({
                           </span>
                         ))}
                       </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">-</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground text-xs max-w-xs">
